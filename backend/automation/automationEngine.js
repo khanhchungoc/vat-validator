@@ -78,27 +78,43 @@ async function startProcessing(sessionDir, mode = 'auto') {
       let finalStatus = 'pass'
       let site1Screenshot = null
       let site2Screenshot = null
-
-      try {
-        // Site 1
-        const site1Result = await runSite1(page, invoice, (img, att) => waitForCaptchaAnswer(invoice.id, img, att))
-        if (site1Result.status === 'skipped') {
-          finalStatus = 'skipped'
-        } else {
-          site1Screenshot = saveScreenshot(sessionDir, invoice.id, 1, site1Result.screenshotBase64)
-          if (site1Result.status === 'invalid-invoice') {
-            finalStatus = 'invalid-invoice'
+      let processAttempt = 0
+      const maxProcessAttempts = 3
+      
+      while (processAttempt < maxProcessAttempts) {
+        processAttempt++
+        try {
+          // Site 1
+          const site1Result = await runSite1(page, invoice, (img, att) => waitForCaptchaAnswer(invoice.id, img, att))
+          if (site1Result.status === 'skipped') {
+            finalStatus = 'skipped'
           } else {
-            // Site 2 (only if Site 1 passed)
-            const site2Result = await runSite2(page, invoice)
-            site2Screenshot = saveScreenshot(sessionDir, invoice.id, 2, site2Result.screenshotBase64)
-            if (site2Result.status === 'invalid-business') finalStatus = 'invalid-business'
+            site1Screenshot = saveScreenshot(sessionDir, invoice.id, 1, site1Result.screenshotBase64)
+            if (site1Result.status === 'invalid-invoice') {
+              finalStatus = 'invalid-invoice'
+            } else {
+              // Site 2 (only if Site 1 passed)
+              const site2Result = await runSite2(page, invoice)
+              site2Screenshot = saveScreenshot(sessionDir, invoice.id, 2, site2Result.screenshotBase64)
+              if (site2Result.status === 'invalid-business') finalStatus = 'invalid-business'
+            }
+          }
+          break // break retry loop if successful
+        } catch (e) {
+          console.error(`[Engine] Error on invoice ${invoice.id} (attempt ${processAttempt}):`, e.message)
+          broadcast({ type: 'processing-error', payload: { invoiceId: invoice.id, message: e.message } })
+          
+          const userChoice = await new Promise(resolve => { captchaResolve = resolve })
+          if (userChoice === 'skip' || userChoice === null) {
+            finalStatus = 'skipped'
+            break
+          }
+          // If choice is 'retry', it loops and tries again!
+          if (processAttempt >= maxProcessAttempts) {
+            finalStatus = 'skipped'
+            break
           }
         }
-      } catch (e) {
-        console.error(`[Engine] Error on invoice ${invoice.id}:`, e.message)
-        broadcast({ type: 'error', payload: `Error processing ${invoice.id}: ${e.message}` })
-        finalStatus = 'skipped'
       }
 
       updateInvoiceStatus(invoice.id, finalStatus, { site1Screenshot, site2Screenshot })

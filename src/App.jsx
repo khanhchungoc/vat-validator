@@ -7,6 +7,8 @@ import CaptchaModal from './components/CaptchaModal'
 import ResumePanel from './components/ResumePanel'
 import DownloadButtons from './components/DownloadButtons'
 import DuplicateWarning from './components/DuplicateWarning'
+import ErrorBanner from './components/ErrorBanner'
+
 
 export default function App() {
   const [invoices, setInvoices] = useState([])
@@ -20,6 +22,7 @@ export default function App() {
   const [downloadUrls, setDownloadUrls] = useState({ pdfUrl: null, xlsxUrl: null })
   const [duplicates, setDuplicates] = useState([])
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
+  const [processingError, setProcessingError] = useState(null)
 
   const handleWsMessage = useCallback((msg) => {
     if (msg.type === 'ws-status') {
@@ -40,6 +43,10 @@ export default function App() {
         inv.id === msg.payload.id ? { ...inv, ...msg.payload } : inv
       ))
       setCaptchaData(prev => (prev && prev.id === msg.payload.id) ? null : prev)
+      setProcessingError(null)
+    }
+    if (msg.type === 'processing-error') {
+      setProcessingError(msg.payload.message)
     }
     if (msg.type === 'captcha-required') {
       setCaptchaData(msg.payload)
@@ -123,6 +130,16 @@ export default function App() {
     })
     setCaptchaData(null)
   }, [send, captchaData])
+
+  const handleRetry = useCallback(() => {
+    send({ type: 'captcha-answer', payload: { answer: 'retry' } })
+    setProcessingError(null)
+  }, [send])
+
+  const handleErrorSkip = useCallback(() => {
+    send({ type: 'skip-invoice' })
+    setProcessingError(null)
+  }, [send])
 
   const handleResume = useCallback(async (sessionDir) => {
     try {
@@ -241,6 +258,7 @@ export default function App() {
           )}
         </div>
 
+        <ErrorBanner error={processingError} onRetry={handleRetry} onSkip={handleErrorSkip} />
         <InvoiceQueue invoices={invoices} />
         <DownloadButtons pdfUrl={downloadUrls.pdfUrl} xlsxUrl={downloadUrls.xlsxUrl} />
       </main>

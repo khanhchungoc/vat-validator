@@ -227,3 +227,15 @@ body {
 }
 .mode-btn.active { background: var(--accent); color: white; }
 .mode-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.error-banner {
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(220, 53, 69, 0.15); border: 1px solid var(--fail);
+  border-radius: var(--radius); padding: 16px 20px; margin: 16px 0;
+}
+.error-banner-content { display: flex; gap: 12px; align-items: flex-start; }
+.error-icon { font-size: 1.4rem; }
+.error-banner-content strong { display: block; margin-bottom: 4px; }
+.error-banner-content p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+.error-banner-actions { display: flex; gap: 10px; flex-shrink: 0; }
+
