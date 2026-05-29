@@ -141,4 +141,8 @@ function resumeProcessing() {
   broadcast({ type: 'mode-changed', payload: 'auto' })
 }
 
-module.exports = { startProcessing, stopProcessing, submitCaptchaAnswer, skipInvoice, advanceStep, pauseProcessing, resumeProcessing, setBroadcast }
+function getIsRunning() {
+  return isRunning
+}
+
+module.exports = { startProcessing, stopProcessing, submitCaptchaAnswer, skipInvoice, advanceStep, pauseProcessing, resumeProcessing, setBroadcast, getIsRunning }
