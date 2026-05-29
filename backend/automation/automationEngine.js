@@ -56,51 +56,58 @@ async function startProcessing(sessionDir, mode = 'auto') {
   stepMode = mode === 'step'
   currentSessionDir = sessionDir
 
-  browser = await chromium.launch({ headless: true })
-  const page = await browser.newPage()
+  try {
+    browser = await chromium.launch({ headless: true })
+    const page = await browser.newPage()
 
-  const invoices = getInvoices().filter(i => i.status === 'pending')
+    const invoices = getInvoices().filter(i => i.status === 'pending')
 
-  for (const invoice of invoices) {
-    updateInvoiceStatus(invoice.id, 'processing')
-    broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: 'processing' } })
+    for (const invoice of invoices) {
+      updateInvoiceStatus(invoice.id, 'processing')
+      broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: 'processing' } })
 
-    let finalStatus = 'pass'
-    let site1Screenshot = null
-    let site2Screenshot = null
+      let finalStatus = 'pass'
+      let site1Screenshot = null
+      let site2Screenshot = null
 
-    try {
-      // Site 1
-      const site1Result = await runSite1(page, invoice, waitForCaptchaAnswer)
-      if (site1Result.status === 'skipped') {
-        finalStatus = 'skipped'
-      } else {
-        site1Screenshot = saveScreenshot(sessionDir, invoice.id, 1, site1Result.screenshotBase64)
-        if (site1Result.status === 'invalid-invoice') {
-          finalStatus = 'invalid-invoice'
+      try {
+        // Site 1
+        const site1Result = await runSite1(page, invoice, waitForCaptchaAnswer)
+        if (site1Result.status === 'skipped') {
+          finalStatus = 'skipped'
         } else {
-          // Site 2 (only if Site 1 passed)
-          const site2Result = await runSite2(page, invoice)
-          site2Screenshot = saveScreenshot(sessionDir, invoice.id, 2, site2Result.screenshotBase64)
-          if (site2Result.status === 'invalid-business') finalStatus = 'invalid-business'
+          site1Screenshot = saveScreenshot(sessionDir, invoice.id, 1, site1Result.screenshotBase64)
+          if (site1Result.status === 'invalid-invoice') {
+            finalStatus = 'invalid-invoice'
+          } else {
+            // Site 2 (only if Site 1 passed)
+            const site2Result = await runSite2(page, invoice)
+            site2Screenshot = saveScreenshot(sessionDir, invoice.id, 2, site2Result.screenshotBase64)
+            if (site2Result.status === 'invalid-business') finalStatus = 'invalid-business'
+          }
         }
+      } catch (e) {
+        console.error(`[Engine] Error on invoice ${invoice.id}:`, e.message)
+        broadcast({ type: 'error', payload: `Error processing ${invoice.id}: ${e.message}` })
+        finalStatus = 'skipped'
       }
-    } catch (e) {
-      console.error(`[Engine] Error on invoice ${invoice.id}:`, e.message)
-      broadcast({ type: 'error', payload: `Error processing ${invoice.id}: ${e.message}` })
-      finalStatus = 'skipped'
+
+      updateInvoiceStatus(invoice.id, finalStatus, { site1Screenshot, site2Screenshot })
+      broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: finalStatus, site1Screenshot, site2Screenshot } })
+
+      await waitForStep()
     }
-
-    updateInvoiceStatus(invoice.id, finalStatus, { site1Screenshot, site2Screenshot })
-    broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: finalStatus, site1Screenshot, site2Screenshot } })
-
-    await waitForStep()
+  } catch (e) {
+    console.error('[Engine] Fatal error:', e.message)
+    broadcast({ type: 'error', payload: `Fatal error: ${e.message}` })
+  } finally {
+    if (browser) {
+      await browser.close()
+      browser = null
+    }
+    isRunning = false
+    broadcast({ type: 'batch-complete' })
   }
-
-  await browser.close()
-  browser = null
-  isRunning = false
-  broadcast({ type: 'batch-complete' })
 }
 
 function pauseProcessing() {
