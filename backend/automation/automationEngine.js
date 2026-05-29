@@ -27,8 +27,8 @@ function saveScreenshot(sessionDir, invoiceId, site, base64Data) {
   return filename
 }
 
-async function waitForCaptchaAnswer(base64Image, attempt) {
-  broadcast({ type: 'captcha-required', payload: { image: base64Image, attempt } })
+async function waitForCaptchaAnswer(invoiceId, base64Image, attempt) {
+  broadcast({ type: 'captcha-required', payload: { id: invoiceId, image: base64Image, attempt } })
   return new Promise((resolve) => { captchaResolve = resolve })
 }
 
@@ -77,7 +77,7 @@ async function startProcessing(sessionDir, mode = 'auto') {
 
       try {
         // Site 1
-        const site1Result = await runSite1(page, invoice, waitForCaptchaAnswer)
+        const site1Result = await runSite1(page, invoice, (img, att) => waitForCaptchaAnswer(invoice.id, img, att))
         if (site1Result.status === 'skipped') {
           finalStatus = 'skipped'
         } else {

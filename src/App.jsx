@@ -3,10 +3,12 @@ import { useWebSocket } from './useWebSocket'
 import DropZone from './components/DropZone'
 import ManualEntryForm from './components/ManualEntryForm'
 import InvoiceQueue from './components/InvoiceQueue'
+import CaptchaModal from './components/CaptchaModal'
 
 export default function App() {
   const [invoices, setInvoices] = useState([])
   const [showManualForm, setShowManualForm] = useState(false)
+  const [captchaData, setCaptchaData] = useState(null)
   const [wsStatus, setWsStatus] = useState('Connecting...')
 
   const handleWsMessage = useCallback((msg) => {
@@ -22,6 +24,16 @@ export default function App() {
         if (prev.some(i => i.id === msg.payload.id)) return prev
         return [...prev, msg.payload]
       })
+    }
+    if (msg.type === 'invoice-status') {
+      setInvoices(prev => prev.map(inv => 
+        inv.id === msg.payload.id ? { ...inv, ...msg.payload } : inv
+      ))
+      // Clear captcha if it was for this invoice
+      setCaptchaData(prev => (prev && prev.id === msg.payload.id) ? null : prev)
+    }
+    if (msg.type === 'captcha-required') {
+      setCaptchaData(msg.payload)
     }
     if (msg.type === 'error') {
       alert(msg.payload)
@@ -53,6 +65,23 @@ export default function App() {
     }
   }, [send])
 
+  const handleCaptchaSubmit = useCallback((answer) => {
+    if (!captchaData) return
+    send({
+      type: 'captcha-answer',
+      payload: { id: captchaData.id, answer }
+    })
+  }, [send, captchaData])
+
+  const handleSkipInvoice = useCallback(() => {
+    if (!captchaData) return
+    send({
+      type: 'skip-invoice',
+      payload: { id: captchaData.id }
+    })
+    setCaptchaData(null)
+  }, [send, captchaData])
+
   return (
     <div className="app">
       <header className="app-header">
@@ -74,6 +103,14 @@ export default function App() {
         <ManualEntryForm
           onSubmit={handleManualSubmit}
           onClose={() => setShowManualForm(false)}
+        />
+      )}
+      {captchaData && (
+        <CaptchaModal
+          imageBase64={captchaData.image}
+          attempt={captchaData.attempt}
+          onSubmit={handleCaptchaSubmit}
+          onSkip={handleSkipInvoice}
         />
       )}
     </div>
