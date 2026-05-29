@@ -2,15 +2,31 @@ const { app, BrowserWindow } = require('electron')
 const path = require('path')
 const { spawn } = require('child_process')
 
+const isDev = !app.isPackaged
+
+function getBackendPath() {
+  if (isDev) return path.join(__dirname, '../backend/index.js')
+  return path.join(process.resourcesPath, 'backend/index.js')
+}
+
+function getNodePath() {
+  if (isDev) return 'node'
+  return process.execPath.replace('VATOCR.exe', 'node.exe')
+}
+
 let backendProcess = null
 
 function startBackend() {
-  backendProcess = spawn('node', [path.join(__dirname, '../backend/index.js')], {
-    stdio: 'inherit'
+  const backendPath = getBackendPath()
+  backendProcess = spawn(getNodePath(), [backendPath], {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+      OUTPUT_DIR: path.join(app.getPath('documents'), 'VATOCR', 'output')
+    }
   })
-  backendProcess.on('error', (err) => {
-    console.error('[Electron] Failed to start backend:', err)
-  })
+  backendProcess.on('error', (err) => console.error('[Electron] Backend error:', err))
 }
 
 function createWindow() {
@@ -21,13 +37,11 @@ function createWindow() {
     minHeight: 600,
     title: 'VATOCR — VAT Invoice Validator',
     webPreferences: {
-      nodeIntegration: false, // Security best practice
+      nodeIntegration: false,
       contextIsolation: true
     }
   })
 
-  // In development, load from Vite dev server
-  const isDev = !app.isPackaged
   if (isDev) {
     win.loadURL('http://localhost:5173')
     win.webContents.openDevTools({ mode: 'detach' })
@@ -38,20 +52,13 @@ function createWindow() {
 
 app.whenReady().then(() => {
   startBackend()
-  
-  // Wait a moment for Vite server to be ready before creating window
-  setTimeout(createWindow, 1000)
-
+  setTimeout(createWindow, isDev ? 1000 : 2000)
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
 app.on('window-all-closed', () => {
-  if (backendProcess) {
-    backendProcess.kill()
-  }
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+  if (backendProcess) backendProcess.kill()
+  if (process.platform !== 'darwin') app.quit()
 })

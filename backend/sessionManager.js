@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const OUTPUT_DIR = path.join(process.cwd(), 'output')
+const OUTPUT_DIR = process.env.OUTPUT_DIR || path.join(process.cwd(), 'output')
 
 function validateDir(dir) {
   if (!dir || typeof dir !== 'string') return false
