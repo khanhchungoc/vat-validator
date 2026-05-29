@@ -17,7 +17,9 @@ app.use((req, res, next) => {
 })
 
 const uploadRoute = require('./routes/upload')
+const sessionsRoute = require('./routes/sessions')
 app.use('/upload', uploadRoute)
+app.use('/sessions', sessionsRoute)
 
 // Basic health check
 app.get('/api/health', (req, res) => {
