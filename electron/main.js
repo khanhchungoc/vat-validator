@@ -35,6 +35,18 @@ function startBackend() {
       )
     }
   })
+  backendProcess.on('exit', (code, signal) => {
+    console.warn(`[Electron] Backend process exited with code ${code} and signal ${signal}`)
+    backendProcess = null
+    if (code !== 0 && code !== null) {
+      if (!isDev) {
+        dialog.showErrorBox(
+          'Backend Validator Service Stopped',
+          'The background validator service stopped unexpectedly. Please restart the application.'
+        )
+      }
+    }
+  })
 }
 
 function createWindow() {

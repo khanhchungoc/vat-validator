@@ -108,4 +108,4 @@ function listIncompleteSessions() {
   }
 }
 
-module.exports = { createSession, saveSession, loadSession, listIncompleteSessions, OUTPUT_DIR }
+module.exports = { createSession, saveSession, loadSession, listIncompleteSessions, OUTPUT_DIR, validateDir }

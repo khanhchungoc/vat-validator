@@ -17,7 +17,14 @@ jest.mock('../sessionManager', () => ({
   createSession: jest.fn(),
   loadSession: jest.fn(),
   listIncompleteSessions: jest.fn(),
-  OUTPUT_DIR: 'C:\\Users\\KhanhChuNgoc\\Documents\\Personal Projects\\VATOCR\\output'
+  OUTPUT_DIR: 'C:\\Users\\KhanhChuNgoc\\Documents\\Personal Projects\\VATOCR\\output',
+  validateDir: jest.fn().mockImplementation((dir) => {
+    if (!dir) return false
+    const path = require('path')
+    const absolute = path.resolve(dir)
+    const base = path.resolve('C:\\Users\\KhanhChuNgoc\\Documents\\Personal Projects\\VATOCR\\output')
+    return absolute === base || absolute.startsWith(base + path.sep)
+  })
 }))
 
 // Helper to extract route handlers

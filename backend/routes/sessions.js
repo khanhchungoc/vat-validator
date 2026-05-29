@@ -1,5 +1,5 @@
 const express = require('express')
-const { createSession, loadSession, listIncompleteSessions, OUTPUT_DIR } = require('../sessionManager')
+const { createSession, loadSession, listIncompleteSessions, OUTPUT_DIR, validateDir } = require('../sessionManager')
 const { loadInvoices, clearInvoices } = require('../invoiceStore')
 const { getIsRunning } = require('../automation/automationEngine')
 const path = require('path')
@@ -30,8 +30,7 @@ router.post('/resume', (req, res) => {
   if (!sessionDir) return res.status(400).json({ error: 'sessionDir required' })
 
   // Validate sessionDir belongs to OUTPUT_DIR
-  const absolute = path.resolve(sessionDir)
-  if (!absolute.startsWith(path.resolve(OUTPUT_DIR))) {
+  if (!validateDir(sessionDir)) {
     return res.status(400).json({ error: 'Invalid session directory' })
   }
 
