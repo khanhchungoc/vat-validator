@@ -6,7 +6,7 @@ export default function DropZone({ onFilesUploaded }) {
   const inputRef = useRef()
 
   async function uploadFiles(files) {
-    const xmlFiles = Array.from(files).filter(f => f.name.endsWith('.xml'))
+    const xmlFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.xml'))
     if (xmlFiles.length === 0) return
 
     setUploading(true)
@@ -19,6 +19,7 @@ export default function DropZone({ onFilesUploaded }) {
       onFilesUploaded(data.results)
     } catch (e) {
       console.error('Upload failed:', e)
+      alert('Failed to upload invoices. Please check your connection and ensure the backend is running.')
     } finally {
       setUploading(false)
     }
@@ -32,8 +33,15 @@ export default function DropZone({ onFilesUploaded }) {
       onDrop={e => { e.preventDefault(); setDragging(false); uploadFiles(e.dataTransfer.files) }}
       onClick={() => inputRef.current.click()}
     >
-      <input ref={inputRef} type="file" accept=".xml" multiple hidden
-        onChange={e => uploadFiles(e.target.files)} />
+      <input 
+        ref={inputRef} 
+        type="file" 
+        accept=".xml" 
+        multiple 
+        hidden
+        onClick={e => e.stopPropagation()}
+        onChange={e => uploadFiles(e.target.files)} 
+      />
       {uploading
         ? <p>Uploading...</p>
         : <p>📂 Drop XML files here or click to browse</p>}
