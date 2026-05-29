@@ -79,7 +79,9 @@ export function useWebSocket(onMessage) {
   const send = (msg) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(msg))
+      return true
     }
+    return false
   }
 
   return { send }

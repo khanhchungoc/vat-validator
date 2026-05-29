@@ -45,8 +45,12 @@ export default function App() {
   }, [])
 
   const handleManualSubmit = useCallback((data) => {
-    send({ type: 'add-manual-invoice', payload: data })
-    setShowManualForm(false)
+    const sent = send({ type: 'add-manual-invoice', payload: data })
+    if (sent) {
+      setShowManualForm(false)
+    } else {
+      alert('Failed to send manual invoice: WebSocket is disconnected. Please check your connection and try again.')
+    }
   }, [send])
 
   return (

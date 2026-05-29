@@ -20,7 +20,11 @@ export default function InvoiceQueue({ invoices }) {
             <div className="invoice-info">
               <span className="invoice-id">{inv.invoiceCode} / {inv.invoiceNumber}</span>
               <span className="invoice-seller">{inv.sellerName}</span>
-              <span className="invoice-amount">{inv.totalAmount.toLocaleString('vi-VN')} ₫</span>
+              <span className="invoice-amount">
+                {typeof inv.totalAmount === 'number' && !isNaN(inv.totalAmount)
+                  ? inv.totalAmount.toLocaleString('vi-VN')
+                  : '0'} ₫
+              </span>
             </div>
             <span className="invoice-status" style={{ color: s.color }}>{s.label}</span>
           </div>
