@@ -101,11 +101,12 @@ async function startProcessing(sessionDir, mode = 'auto') {
     console.error('[Engine] Fatal error:', e.message)
     broadcast({ type: 'error', payload: `Fatal error: ${e.message}` })
   } finally {
-    if (browser) {
-      await browser.close()
-      browser = null
-    }
+    if (browser) await browser.close()
+    browser = null
     isRunning = false
+    captchaResolve = null
+    stepResolve = null
+    currentSessionDir = null
     broadcast({ type: 'batch-complete' })
   }
 }
