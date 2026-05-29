@@ -12,6 +12,10 @@ export function useWebSocket(onMessage) {
   useEffect(() => {
     function connect() {
       if (ws.current) {
+        ws.current.onopen = null
+        ws.current.onerror = null
+        ws.current.onmessage = null
+        ws.current.onclose = null
         ws.current.close()
       }
 
@@ -63,6 +67,10 @@ export function useWebSocket(onMessage) {
         clearTimeout(reconnectTimer.current)
       }
       if (ws.current) {
+        ws.current.onopen = null
+        ws.current.onerror = null
+        ws.current.onmessage = null
+        ws.current.onclose = null
         ws.current.close()
       }
     }
