@@ -6,6 +6,9 @@ const { handleMessage } = require('./wsHandler')
 const app = express()
 app.use(express.json())
 
+const uploadRoute = require('./routes/upload')
+app.use('/upload', uploadRoute)
+
 // Basic health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' })
