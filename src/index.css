@@ -101,5 +101,29 @@ body {
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
 .error { color: var(--fail); font-size: 0.85rem; margin-bottom: 12px; }
 
+.queue { margin-top: 24px; }
+.queue h3 { margin-bottom: 12px; font-size: 1rem; color: var(--text-muted); }
+.invoice-card {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.invoice-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.invoice-card.processing { border-color: var(--accent); }
+.invoice-card.pass { border-color: var(--pass); }
+.invoice-card.invalid-invoice, .invoice-card.invalid-business { border-color: var(--fail); }
+.invoice-info { display: flex; flex-direction: column; gap: 2px; }
+.invoice-id { font-weight: 600; font-size: 0.95rem; color: var(--text-main); }
+.invoice-seller { font-size: 0.8rem; color: var(--text-muted); }
+.invoice-amount { font-size: 0.8rem; color: var(--accent2); font-weight: 500; }
+.invoice-status { font-size: 0.85rem; font-weight: 500; white-space: nowrap; }
 
-
+.app-main {
+  max-width: 800px; margin: 0 auto; width: 100%;
+  display: flex; flex-direction: column; gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}

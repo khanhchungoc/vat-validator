@@ -2,6 +2,12 @@ import { useEffect, useRef } from 'react'
 
 export function useWebSocket(onMessage) {
   const ws = useRef(null)
+  const onMessageRef = useRef(onMessage)
+  
+  // Always update the ref with the latest callback on every render
+  useEffect(() => {
+    onMessageRef.current = onMessage
+  }, [onMessage])
 
   useEffect(() => {
     ws.current = new WebSocket('ws://localhost:3001')
@@ -14,7 +20,7 @@ export function useWebSocket(onMessage) {
     ws.current.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data)
-        if (onMessage) onMessage(msg)
+        if (onMessageRef.current) onMessageRef.current(msg)
       } catch (e) {
         console.error('[WS] Failed to parse message', e)
       }
@@ -22,7 +28,6 @@ export function useWebSocket(onMessage) {
 
     ws.current.onclose = () => {
       console.log('[WS] Disconnected')
-      // Simple reconnect logic could go here
     }
 
     return () => {
@@ -30,7 +35,7 @@ export function useWebSocket(onMessage) {
         ws.current.close()
       }
     }
-  }, [onMessage])
+  }, []) // Empty dependency array ensures we only connect ONCE
 
   const send = (msg) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
@@ -40,3 +45,4 @@ export function useWebSocket(onMessage) {
 
   return { send }
 }
+
