@@ -51,7 +51,10 @@ function advanceStep() {
 }
 
 async function startProcessing(sessionDir, mode = 'auto') {
-  if (isRunning) return
+  if (isRunning) {
+    broadcast({ type: 'error', payload: 'Automation engine is already running' })
+    return { ok: false, error: 'Already running' }
+  }
   isRunning = true
   stepMode = mode === 'step'
   currentSessionDir = sessionDir
@@ -63,6 +66,8 @@ async function startProcessing(sessionDir, mode = 'auto') {
     const invoices = getInvoices().filter(i => i.status === 'pending')
 
     for (const invoice of invoices) {
+      if (!isRunning) break // Check if stopped manually
+
       updateInvoiceStatus(invoice.id, 'processing')
       broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: 'processing' } })
 
@@ -97,9 +102,11 @@ async function startProcessing(sessionDir, mode = 'auto') {
 
       await waitForStep()
     }
+    return { ok: true }
   } catch (e) {
     console.error('[Engine] Fatal error:', e.message)
     broadcast({ type: 'error', payload: `Fatal error: ${e.message}` })
+    return { ok: false, error: e.message }
   } finally {
     if (browser) await browser.close()
     browser = null
@@ -109,6 +116,18 @@ async function startProcessing(sessionDir, mode = 'auto') {
     currentSessionDir = null
     broadcast({ type: 'batch-complete' })
   }
+}
+
+async function stopProcessing() {
+  if (!isRunning) return
+  console.log('[Engine] Stopping processing...')
+  isRunning = false
+  if (browser) {
+    await browser.close()
+    browser = null
+  }
+  if (captchaResolve) { captchaResolve(null); captchaResolve = null }
+  if (stepResolve) { stepResolve(); stepResolve = null }
 }
 
 function pauseProcessing() {
@@ -122,4 +141,4 @@ function resumeProcessing() {
   broadcast({ type: 'mode-changed', payload: 'auto' })
 }
 
-module.exports = { startProcessing, submitCaptchaAnswer, skipInvoice, advanceStep, pauseProcessing, resumeProcessing, setBroadcast }
+module.exports = { startProcessing, stopProcessing, submitCaptchaAnswer, skipInvoice, advanceStep, pauseProcessing, resumeProcessing, setBroadcast }

@@ -5,16 +5,16 @@ beforeEach(() => {
   store.clearInvoices()
 })
 
-test('handleMessage ping', () => {
+test('handleMessage ping', async () => {
   const ws = {
     send: jest.fn()
   }
-  handleMessage(ws, { type: 'ping' })
+  await handleMessage(ws, { type: 'ping' })
   expect(ws.send).toHaveBeenCalledTimes(1)
   expect(JSON.parse(ws.send.mock.calls[0][0])).toEqual({ type: 'pong' })
 })
 
-test('handleMessage add-manual-invoice success', () => {
+test('handleMessage add-manual-invoice success', async () => {
   const ws = {
     send: jest.fn(),
     readyState: 1
@@ -30,7 +30,7 @@ test('handleMessage add-manual-invoice success', () => {
     sellerAddress: '123 Main St',
     totalAmount: 150.5
   }
-  handleMessage(ws, { type: 'add-manual-invoice', payload }, wss)
+  await handleMessage(ws, { type: 'add-manual-invoice', payload }, wss)
 
   expect(ws.send).toHaveBeenCalledTimes(1)
   const response = JSON.parse(ws.send.mock.calls[0][0])
@@ -51,7 +51,7 @@ test('handleMessage add-manual-invoice success', () => {
   expect(store.getInvoices()[0]).toEqual(response.payload)
 })
 
-test('handleMessage add-manual-invoice missing fields', () => {
+test('handleMessage add-manual-invoice missing fields', async () => {
   const ws = {
     send: jest.fn()
   }
@@ -61,7 +61,7 @@ test('handleMessage add-manual-invoice missing fields', () => {
     taxId: '1234567890',
     totalAmount: 150.5
   }
-  handleMessage(ws, { type: 'add-manual-invoice', payload })
+  await handleMessage(ws, { type: 'add-manual-invoice', payload })
 
   expect(ws.send).toHaveBeenCalledTimes(1)
   const response = JSON.parse(ws.send.mock.calls[0][0])
@@ -73,7 +73,7 @@ test('handleMessage add-manual-invoice missing fields', () => {
   expect(store.getInvoices()).toHaveLength(0)
 })
 
-test('handleMessage add-manual-invoice duplicate error', () => {
+test('handleMessage add-manual-invoice duplicate error', async () => {
   const ws = {
     send: jest.fn(),
     readyState: 1
@@ -91,14 +91,14 @@ test('handleMessage add-manual-invoice duplicate error', () => {
   }
 
   // Add once successfully
-  handleMessage(ws, { type: 'add-manual-invoice', payload }, wss)
+  await handleMessage(ws, { type: 'add-manual-invoice', payload }, wss)
   expect(store.getInvoices()).toHaveLength(1)
 
   // Try to add again
   const ws2 = {
     send: jest.fn()
   }
-  handleMessage(ws2, { type: 'add-manual-invoice', payload })
+  await handleMessage(ws2, { type: 'add-manual-invoice', payload })
   
   expect(ws2.send).toHaveBeenCalledTimes(1)
   const response = JSON.parse(ws2.send.mock.calls[0][0])
@@ -108,12 +108,12 @@ test('handleMessage add-manual-invoice duplicate error', () => {
   expect(store.getInvoices()).toHaveLength(1)
 })
 
-test('handleMessage add-manual-invoice missing payload entirely', () => {
+test('handleMessage add-manual-invoice missing payload entirely', async () => {
   const ws = {
     send: jest.fn()
   }
   // No payload is sent at all
-  handleMessage(ws, { type: 'add-manual-invoice' })
+  await handleMessage(ws, { type: 'add-manual-invoice' })
 
   expect(ws.send).toHaveBeenCalledTimes(1)
   const response = JSON.parse(ws.send.mock.calls[0][0])
@@ -122,7 +122,7 @@ test('handleMessage add-manual-invoice missing payload entirely', () => {
   expect(store.getInvoices()).toHaveLength(0)
 })
 
-test('handleMessage add-manual-invoice non-numeric totalAmount', () => {
+test('handleMessage add-manual-invoice non-numeric totalAmount', async () => {
   const ws = {
     send: jest.fn()
   }
@@ -134,7 +134,7 @@ test('handleMessage add-manual-invoice non-numeric totalAmount', () => {
     sellerAddress: '',
     totalAmount: 'abc'
   }
-  handleMessage(ws, { type: 'add-manual-invoice', payload })
+  await handleMessage(ws, { type: 'add-manual-invoice', payload })
 
   expect(ws.send).toHaveBeenCalledTimes(1)
   const response = JSON.parse(ws.send.mock.calls[0][0])
@@ -143,7 +143,7 @@ test('handleMessage add-manual-invoice non-numeric totalAmount', () => {
   expect(store.getInvoices()).toHaveLength(0)
 })
 
-test('handleMessage add-manual-invoice zero or negative totalAmount', () => {
+test('handleMessage add-manual-invoice zero or negative totalAmount', async () => {
   const ws = {
     send: jest.fn()
   }
@@ -155,7 +155,7 @@ test('handleMessage add-manual-invoice zero or negative totalAmount', () => {
     sellerAddress: '',
     totalAmount: 0
   }
-  handleMessage(ws, { type: 'add-manual-invoice', payload: payloadZero })
+  await handleMessage(ws, { type: 'add-manual-invoice', payload: payloadZero })
 
   expect(ws.send).toHaveBeenCalledTimes(1)
   let response = JSON.parse(ws.send.mock.calls[0][0])
@@ -173,7 +173,7 @@ test('handleMessage add-manual-invoice zero or negative totalAmount', () => {
     sellerAddress: '',
     totalAmount: -100
   }
-  handleMessage(wsNegative, { type: 'add-manual-invoice', payload: payloadNegative })
+  await handleMessage(wsNegative, { type: 'add-manual-invoice', payload: payloadNegative })
 
   expect(wsNegative.send).toHaveBeenCalledTimes(1)
   response = JSON.parse(wsNegative.send.mock.calls[0][0])

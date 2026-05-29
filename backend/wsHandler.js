@@ -1,17 +1,27 @@
 const { addInvoice } = require('./invoiceStore')
 const engine = require('./automation/automationEngine')
 
-function handleMessage(ws, msg, wss) {
+async function handleMessage(ws, msg, wss) {
   console.log('[WS] Received:', msg.type)
   switch (msg.type) {
     case 'ping':
       ws.send(JSON.stringify({ type: 'pong' }))
       break
     case 'start-processing': {
-      const { sessionDir, mode } = msg.payload || {}
-      engine.startProcessing(sessionDir, mode)
+      let { sessionDir, mode } = msg.payload || {}
+      if (!sessionDir || typeof sessionDir !== 'string' || sessionDir.includes('..')) {
+        ws.send(JSON.stringify({ type: 'error', payload: 'Invalid session directory' }))
+        break
+      }
+      const result = await engine.startProcessing(sessionDir, mode)
+      if (result && !result.ok) {
+        ws.send(JSON.stringify({ type: 'error', payload: result.error }))
+      }
       break
     }
+    case 'stop-processing':
+      await engine.stopProcessing()
+      break
     case 'captcha-answer': {
       const { answer } = msg.payload || {}
       engine.submitCaptchaAnswer(answer)

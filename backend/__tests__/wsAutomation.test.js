@@ -2,47 +2,67 @@ const { handleMessage } = require('../wsHandler')
 const engine = require('../automation/automationEngine')
 
 jest.mock('../automation/automationEngine', () => ({
-  startProcessing: jest.fn(),
+  startProcessing: jest.fn().mockResolvedValue(),
+  stopProcessing: jest.fn().mockResolvedValue(),
   submitCaptchaAnswer: jest.fn(),
   skipInvoice: jest.fn(),
   advanceStep: jest.fn(),
   pauseProcessing: jest.fn(),
-  resumeProcessing: jest.fn(),
-  setBroadcast: jest.fn()
+  resumeProcessing: jest.fn()
 }))
 
-describe('WS Automation Messages', () => {
-  const ws = { send: jest.fn() }
+describe('WS Automation Integration', () => {
+  let ws
 
-  test('start-processing', () => {
-    const payload = { sessionDir: 'test-dir', mode: 'auto' }
-    handleMessage(ws, { type: 'start-processing', payload })
-    expect(engine.startProcessing).toHaveBeenCalledWith('test-dir', 'auto')
+  beforeEach(() => {
+    ws = { send: jest.fn() }
+    jest.clearAllMocks()
   })
 
-  test('captcha-answer', () => {
-    const payload = { answer: '1234' }
-    handleMessage(ws, { type: 'captcha-answer', payload })
-    expect(engine.submitCaptchaAnswer).toHaveBeenCalledWith('1234')
+  test('start-processing calls engine.startProcessing', async () => {
+    const payload = { sessionDir: 'test-dir', mode: 'step' }
+    await handleMessage(ws, { type: 'start-processing', payload })
+    expect(engine.startProcessing).toHaveBeenCalledWith('test-dir', 'step')
   })
 
-  test('skip-invoice', () => {
-    handleMessage(ws, { type: 'skip-invoice' })
+  test('start-processing rejects invalid sessionDir', async () => {
+    const payload = { sessionDir: '../danger', mode: 'auto' }
+    await handleMessage(ws, { type: 'start-processing', payload })
+    expect(engine.startProcessing).not.toHaveBeenCalled()
+    expect(ws.send).toHaveBeenCalled()
+    const response = JSON.parse(ws.send.mock.calls[0][0])
+    expect(response.type).toBe('error')
+    expect(response.payload).toBe('Invalid session directory')
+  })
+
+  test('stop-processing calls engine.stopProcessing', async () => {
+    await handleMessage(ws, { type: 'stop-processing' })
+    expect(engine.stopProcessing).toHaveBeenCalled()
+  })
+
+  test('captcha-answer calls engine.submitCaptchaAnswer', async () => {
+    const payload = { answer: '12345' }
+    await handleMessage(ws, { type: 'captcha-answer', payload })
+    expect(engine.submitCaptchaAnswer).toHaveBeenCalledWith('12345')
+  })
+
+  test('skip-invoice calls engine.skipInvoice', async () => {
+    await handleMessage(ws, { type: 'skip-invoice' })
     expect(engine.skipInvoice).toHaveBeenCalled()
   })
 
-  test('advance-step', () => {
-    handleMessage(ws, { type: 'advance-step' })
+  test('advance-step calls engine.advanceStep', async () => {
+    await handleMessage(ws, { type: 'advance-step' })
     expect(engine.advanceStep).toHaveBeenCalled()
   })
 
-  test('set-mode paused', () => {
-    handleMessage(ws, { type: 'set-mode', payload: { mode: 'paused' } })
+  test('set-mode paused calls engine.pauseProcessing', async () => {
+    await handleMessage(ws, { type: 'set-mode', payload: { mode: 'paused' } })
     expect(engine.pauseProcessing).toHaveBeenCalled()
   })
 
-  test('set-mode resumed', () => {
-    handleMessage(ws, { type: 'set-mode', payload: { mode: 'manual' } })
+  test('set-mode anything else calls engine.resumeProcessing', async () => {
+    await handleMessage(ws, { type: 'set-mode', payload: { mode: 'auto' } })
     expect(engine.resumeProcessing).toHaveBeenCalled()
   })
 })
