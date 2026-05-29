@@ -1,0 +1,17 @@
+{
+  "name": "vatocr",
+  "version": "1.0.0",
+  "description": "VAT Invoice Validation Desktop App",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:electron\"",
+    "dev:frontend": "vite",
+    "dev:backend": "node backend/index.js",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "build": "vite build",
+    "pack": "npm run build && electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
