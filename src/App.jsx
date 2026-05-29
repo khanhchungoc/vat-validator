@@ -47,7 +47,7 @@ export default function App() {
     if (msg.type === 'batch-complete') {
       setIsProcessing(false)
       setIsStepWaiting(false)
-      if (msg.payload?.pdfUrl) {
+      if (msg.payload?.pdfUrl || msg.payload?.xlsxUrl) {
         setDownloadUrls({ pdfUrl: msg.payload.pdfUrl, xlsxUrl: msg.payload.xlsxUrl })
       } else {
         setDownloadUrls({ pdfUrl: null, xlsxUrl: null })
