@@ -6,6 +6,7 @@ import InvoiceQueue from './components/InvoiceQueue'
 import CaptchaModal from './components/CaptchaModal'
 import ResumePanel from './components/ResumePanel'
 import DownloadButtons from './components/DownloadButtons'
+import DuplicateWarning from './components/DuplicateWarning'
 
 export default function App() {
   const [invoices, setInvoices] = useState([])
@@ -17,6 +18,8 @@ export default function App() {
   const [processingMode, setProcessingMode] = useState('auto')
   const [isStepWaiting, setIsStepWaiting] = useState(false)
   const [downloadUrls, setDownloadUrls] = useState({ pdfUrl: null, xlsxUrl: null })
+  const [duplicates, setDuplicates] = useState([])
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
 
   const handleWsMessage = useCallback((msg) => {
     if (msg.type === 'ws-status') {
@@ -65,16 +68,34 @@ export default function App() {
 
   const handleFilesUploaded = useCallback((results) => {
     const added = results.filter(r => r.ok).map(r => r.invoice)
-    const errors = results.filter(r => !r.ok)
+    const dupes = results.filter(r => !r.ok && r.error?.includes('Duplicate')).map(r => {
+      const match = r.error.match(/Duplicate invoice ID:\s*(.+)/i)
+      return match ? match[1] : r.error
+    })
+    const otherErrors = results.filter(r => !r.ok && !r.error?.includes('Duplicate')).map(r => r.error)
     
     setInvoices(prev => {
       const filteredAdded = added.filter(newInv => !prev.some(oldInv => oldInv.id === newInv.id))
       return [...prev, ...filteredAdded]
     })
     
-    if (errors.length > 0) {
-      alert(errors.map(e => e.error).join('\n'))
+    if (dupes.length > 0) {
+      setDuplicates(dupes)
+      setShowDuplicateWarning(true)
     }
+    if (otherErrors.length > 0) {
+      alert(otherErrors.join('\n'))
+    }
+  }, [])
+
+  const handleRemoveDuplicates = useCallback(() => {
+    setShowDuplicateWarning(false)
+    setDuplicates([])
+  }, [])
+
+  const handleProceedWithDuplicates = useCallback(() => {
+    setShowDuplicateWarning(false)
+    setDuplicates([])
   }, [])
 
   const handleManualSubmit = useCallback((data) => {
@@ -235,6 +256,13 @@ export default function App() {
           attempt={captchaData.attempt}
           onSubmit={handleCaptchaSubmit}
           onSkip={handleSkipInvoice}
+        />
+      )}
+      {showDuplicateWarning && (
+        <DuplicateWarning
+          duplicates={duplicates}
+          onRemove={handleRemoveDuplicates}
+          onProceed={handleProceedWithDuplicates}
         />
       )}
     </div>
