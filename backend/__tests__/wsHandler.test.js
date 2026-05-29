@@ -99,3 +99,78 @@ test('handleMessage add-manual-invoice duplicate error', () => {
   
   expect(store.getInvoices()).toHaveLength(1)
 })
+
+test('handleMessage add-manual-invoice missing payload entirely', () => {
+  const ws = {
+    send: jest.fn()
+  }
+  // No payload is sent at all
+  handleMessage(ws, { type: 'add-manual-invoice' })
+
+  expect(ws.send).toHaveBeenCalledTimes(1)
+  const response = JSON.parse(ws.send.mock.calls[0][0])
+  expect(response.type).toBe('error')
+  expect(response.payload).toContain('Missing fields')
+  expect(store.getInvoices()).toHaveLength(0)
+})
+
+test('handleMessage add-manual-invoice non-numeric totalAmount', () => {
+  const ws = {
+    send: jest.fn()
+  }
+  const payload = {
+    invoiceCode: 'NONNUM',
+    invoiceNumber: '000124',
+    sellerName: 'Non Numeric Inc',
+    taxId: '0987654321',
+    sellerAddress: '',
+    totalAmount: 'abc'
+  }
+  handleMessage(ws, { type: 'add-manual-invoice', payload })
+
+  expect(ws.send).toHaveBeenCalledTimes(1)
+  const response = JSON.parse(ws.send.mock.calls[0][0])
+  expect(response.type).toBe('error')
+  expect(response.payload).toBe('Invalid total amount')
+  expect(store.getInvoices()).toHaveLength(0)
+})
+
+test('handleMessage add-manual-invoice zero or negative totalAmount', () => {
+  const ws = {
+    send: jest.fn()
+  }
+  const payloadZero = {
+    invoiceCode: 'ZEROVAL',
+    invoiceNumber: '000125',
+    sellerName: 'Zero Inc',
+    taxId: '0987654321',
+    sellerAddress: '',
+    totalAmount: 0
+  }
+  handleMessage(ws, { type: 'add-manual-invoice', payload: payloadZero })
+
+  expect(ws.send).toHaveBeenCalledTimes(1)
+  let response = JSON.parse(ws.send.mock.calls[0][0])
+  expect(response.type).toBe('error')
+  expect(response.payload).toBe('Invalid total amount')
+
+  const wsNegative = {
+    send: jest.fn()
+  }
+  const payloadNegative = {
+    invoiceCode: 'NEGVAL',
+    invoiceNumber: '000126',
+    sellerName: 'Neg Inc',
+    taxId: '0987654321',
+    sellerAddress: '',
+    totalAmount: -100
+  }
+  handleMessage(wsNegative, { type: 'add-manual-invoice', payload: payloadNegative })
+
+  expect(wsNegative.send).toHaveBeenCalledTimes(1)
+  response = JSON.parse(wsNegative.send.mock.calls[0][0])
+  expect(response.type).toBe('error')
+  expect(response.payload).toBe('Invalid total amount')
+
+  expect(store.getInvoices()).toHaveLength(0)
+})

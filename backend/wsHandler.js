@@ -7,16 +7,24 @@ function handleMessage(ws, msg, wss) {
       ws.send(JSON.stringify({ type: 'pong' }))
       break
     case 'add-manual-invoice': {
-      const { invoiceCode, invoiceNumber, sellerName, taxId, sellerAddress, totalAmount } = msg.payload
+      const { invoiceCode, invoiceNumber, sellerName, taxId, sellerAddress, totalAmount } = msg.payload || {}
       const missing = []
       if (!invoiceCode) missing.push('invoiceCode')
       if (!invoiceNumber) missing.push('invoiceNumber')
       if (!sellerName) missing.push('sellerName')
       if (!taxId) missing.push('taxId')
-      if (!totalAmount) missing.push('totalAmount')
+      if (totalAmount === undefined || totalAmount === null || totalAmount === '') {
+        missing.push('totalAmount')
+      }
 
       if (missing.length > 0) {
         ws.send(JSON.stringify({ type: 'error', payload: `Missing fields: ${missing.join(', ')}` }))
+        break
+      }
+
+      const parsedAmount = Number(totalAmount)
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        ws.send(JSON.stringify({ type: 'error', payload: 'Invalid total amount' }))
         break
       }
 
@@ -28,7 +36,7 @@ function handleMessage(ws, msg, wss) {
         sellerName,
         taxId,
         sellerAddress: sellerAddress || '',
-        totalAmount: Number(totalAmount),
+        totalAmount: parsedAmount,
         status: 'pending'
       }
 

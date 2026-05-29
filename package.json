@@ -9,7 +9,8 @@
     "dev:backend": "node backend/index.js",
     "dev:electron": "wait-on http://localhost:5173 && electron .",
     "build": "vite build",
-    "pack": "npm run build && electron-builder"
+    "pack": "npm run build && electron-builder",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
