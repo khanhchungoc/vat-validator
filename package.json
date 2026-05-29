@@ -27,5 +27,33 @@
     "react-dom": "^19.2.6",
     "vite": "^8.0.14",
     "wait-on": "^9.0.10"
+  },
+  "build": {
+    "appId": "com.vatocr.app",
+    "productName": "VATOCR",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "backend/**",
+      "node_modules/**",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "extraResources": [
+      {
+        "from": "node_modules/playwright",
+        "to": "playwright"
+      }
+    ]
   }
 }
