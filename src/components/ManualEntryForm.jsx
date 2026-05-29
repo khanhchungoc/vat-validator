@@ -46,7 +46,7 @@ export default function ManualEntryForm({ onSubmit, onClose }) {
   ]
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={e => e.stopPropagation()}>
         <h3>Add Invoice Manually</h3>
         {error && <p className="error">{error}</p>}
