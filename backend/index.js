@@ -27,6 +27,10 @@ app.get('/api/health', (req, res) => {
 const server = http.createServer(app)
 const wss = new WebSocketServer({ server })
 
+const engine = require('./automation/automationEngine')
+const { broadcast } = require('./wsHandler')
+engine.setBroadcast((msg) => broadcast(wss, msg))
+
 wss.on('connection', (ws) => {
   console.log('[WS] Client connected')
   ws.on('message', (data) => {

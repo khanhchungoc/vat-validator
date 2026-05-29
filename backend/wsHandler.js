@@ -1,4 +1,5 @@
 const { addInvoice } = require('./invoiceStore')
+const engine = require('./automation/automationEngine')
 
 function handleMessage(ws, msg, wss) {
   console.log('[WS] Received:', msg.type)
@@ -6,6 +7,31 @@ function handleMessage(ws, msg, wss) {
     case 'ping':
       ws.send(JSON.stringify({ type: 'pong' }))
       break
+    case 'start-processing': {
+      const { sessionDir, mode } = msg.payload || {}
+      engine.startProcessing(sessionDir, mode)
+      break
+    }
+    case 'captcha-answer': {
+      const { answer } = msg.payload || {}
+      engine.submitCaptchaAnswer(answer)
+      break
+    }
+    case 'skip-invoice':
+      engine.skipInvoice()
+      break
+    case 'advance-step':
+      engine.advanceStep()
+      break
+    case 'set-mode': {
+      const { mode } = msg.payload || {}
+      if (mode === 'paused') {
+        engine.pauseProcessing()
+      } else {
+        engine.resumeProcessing()
+      }
+      break
+    }
     case 'add-manual-invoice': {
       const { invoiceCode, invoiceNumber, sellerName, taxId, sellerAddress, totalAmount } = msg.payload || {}
       const missing = []
