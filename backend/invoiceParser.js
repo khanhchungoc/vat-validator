@@ -1,6 +1,6 @@
 const { XMLParser } = require('fast-xml-parser')
 
-const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
+const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_', parseTagValue: false })
 
 /**
  * Parse a Vietnamese e-invoice XML buffer into an Invoice object.
@@ -21,12 +21,12 @@ function parseInvoiceXML(xmlContent, filename) {
     const payment = dl.NDHDon?.TToan
 
     const missing = []
-    if (!invoiceCode) missing.push('KHHDon')
-    if (!invoiceNumber) missing.push('SHDon')
-    if (!seller?.Ten) missing.push('NBan.Ten')
-    if (!seller?.MST) missing.push('NBan.MST')
-    if (!seller?.DChi) missing.push('NBan.DChi')
-    if (!payment?.TgTTTBSo) missing.push('TToan.TgTTTBSo')
+    if (invoiceCode == null || invoiceCode === '') missing.push('KHHDon')
+    if (invoiceNumber == null || invoiceNumber === '') missing.push('SHDon')
+    if (seller?.Ten == null || seller?.Ten === '') missing.push('NBan.Ten')
+    if (seller?.MST == null || seller?.MST === '') missing.push('NBan.MST')
+    if (seller?.DChi == null || seller?.DChi === '') missing.push('NBan.DChi')
+    if (payment?.TgTTTBSo == null || payment?.TgTTTBSo === '') missing.push('TToan.TgTTTBSo')
 
     if (missing.length > 0) {
       return { ok: false, error: `${filename}: Missing fields: ${missing.join(', ')}` }

@@ -30,3 +30,31 @@ test('returns error for XML missing required fields', () => {
   expect(result.ok).toBe(false)
   expect(result.error).toContain('Missing fields')
 })
+
+test('handles edge case of 0 values and leading zeros', () => {
+  const xml = `
+  <HDon>
+    <DLHDon>
+      <TTChung>
+        <KHHDon>C26MGG</KHHDon>
+        <SHDon>0001234</SHDon>
+      </TTChung>
+      <NDHDon>
+        <NBan>
+          <Ten>Test</Ten>
+          <MST>012345</MST>
+          <DChi>Test Address</DChi>
+        </NBan>
+        <TToan>
+          <TgTTTBSo>0</TgTTTBSo>
+        </TToan>
+      </NDHDon>
+    </DLHDon>
+  </HDon>
+  `
+  const result = parseInvoiceXML(xml, 'edge.xml')
+  expect(result.ok).toBe(true)
+  expect(result.invoice.invoiceNumber).toBe('0001234')
+  expect(result.invoice.taxId).toBe('012345')
+  expect(result.invoice.totalAmount).toBe(0)
+})
