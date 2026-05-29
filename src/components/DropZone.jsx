@@ -16,10 +16,16 @@ export default function DropZone({ onFilesUploaded }) {
     try {
       const res = await fetch('http://localhost:3001/upload', { method: 'POST', body: formData })
       const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data?.error || `Server responded with status ${res.status}`)
+      }
+      if (!data?.results) {
+        throw new Error('Invalid server response structure')
+      }
       onFilesUploaded(data.results)
     } catch (e) {
       console.error('Upload failed:', e)
-      alert('Failed to upload invoices. Please check your connection and ensure the backend is running.')
+      alert(`Failed to upload invoices: ${e.message}`)
     } finally {
       setUploading(false)
     }
@@ -40,7 +46,10 @@ export default function DropZone({ onFilesUploaded }) {
         multiple 
         hidden
         onClick={e => e.stopPropagation()}
-        onChange={e => uploadFiles(e.target.files)} 
+        onChange={e => {
+          uploadFiles(e.target.files)
+          e.target.value = ''
+        }} 
       />
       {uploading
         ? <p>Uploading...</p>
