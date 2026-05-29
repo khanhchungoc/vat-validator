@@ -57,3 +57,21 @@ body {
   transition: background 0.2s;
 }
 .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+.dropzone {
+  border: 2px dashed var(--glass-border);
+  border-radius: var(--radius);
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--glass);
+  transition: border-color 0.2s, background 0.2s;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.dropzone.dragging, .dropzone:hover {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--text-main);
+}
+
