@@ -5,6 +5,7 @@ import ManualEntryForm from './components/ManualEntryForm'
 import InvoiceQueue from './components/InvoiceQueue'
 import CaptchaModal from './components/CaptchaModal'
 import ResumePanel from './components/ResumePanel'
+import DownloadButtons from './components/DownloadButtons'
 
 export default function App() {
   const [invoices, setInvoices] = useState([])
@@ -15,6 +16,7 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingMode, setProcessingMode] = useState('auto')
   const [isStepWaiting, setIsStepWaiting] = useState(false)
+  const [downloadUrls, setDownloadUrls] = useState({ pdfUrl: null, xlsxUrl: null })
 
   const handleWsMessage = useCallback((msg) => {
     if (msg.type === 'ws-status') {
@@ -45,6 +47,11 @@ export default function App() {
     if (msg.type === 'batch-complete') {
       setIsProcessing(false)
       setIsStepWaiting(false)
+      if (msg.payload?.pdfUrl) {
+        setDownloadUrls({ pdfUrl: msg.payload.pdfUrl, xlsxUrl: msg.payload.xlsxUrl })
+      } else {
+        setDownloadUrls({ pdfUrl: null, xlsxUrl: null })
+      }
     }
     if (msg.type === 'mode-changed') {
       setProcessingMode(msg.payload)
@@ -98,6 +105,7 @@ export default function App() {
 
   const handleResume = useCallback(async (sessionDir) => {
     try {
+      setDownloadUrls({ pdfUrl: null, xlsxUrl: null })
       const res = await fetch('http://localhost:3001/sessions/resume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,6 +124,7 @@ export default function App() {
   }, [])
 
   const handleStartProcessing = useCallback(async (mode = 'auto') => {
+    setDownloadUrls({ pdfUrl: null, xlsxUrl: null })
     let sessionDir = currentSessionDir
     if (!sessionDir) {
       try {
@@ -212,6 +221,7 @@ export default function App() {
         </div>
 
         <InvoiceQueue invoices={invoices} />
+        <DownloadButtons pdfUrl={downloadUrls.pdfUrl} xlsxUrl={downloadUrls.xlsxUrl} />
       </main>
       {showManualForm && (
         <ManualEntryForm
