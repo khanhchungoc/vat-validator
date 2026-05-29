@@ -3,6 +3,8 @@ const { runSite1 } = require('./site1')
 const { runSite2 } = require('./site2')
 const { getInvoices, updateInvoiceStatus } = require('../invoiceStore')
 const { saveSession } = require('../sessionManager')
+const { generatePDF } = require('../output/pdfGenerator')
+const { generateXLSX } = require('../output/xlsxGenerator')
 const fs = require('fs')
 const path = require('path')
 
@@ -116,10 +118,36 @@ async function startProcessing(sessionDir, mode = 'auto') {
     isRunning = false
     captchaResolve = null
     stepResolve = null
+    
+    let generated = false
     if (currentSessionDir) {
       saveSession(currentSessionDir, getInvoices())
+      
+      try {
+        const allInvoices = getInvoices()
+        // Generate outputs if there are invoices to report
+        if (allInvoices.length > 0) {
+          const [pdfPath, xlsxPath] = await Promise.all([
+            generatePDF(currentSessionDir, allInvoices),
+            Promise.resolve(generateXLSX(currentSessionDir, allInvoices))
+          ])
+          const sessionId = require('path').basename(currentSessionDir)
+          broadcast({
+            type: 'batch-complete',
+            payload: {
+              pdfUrl: `http://localhost:3001/download/pdf/${sessionId}`,
+              xlsxUrl: `http://localhost:3001/download/xlsx/${sessionId}`
+            }
+          })
+          generated = true
+        }
+      } catch (e) {
+        console.error('[Engine] Output generation failed:', e.message)
+      }
     }
-    broadcast({ type: 'batch-complete' })
+    if (!generated) {
+      broadcast({ type: 'batch-complete', payload: {} })
+    }
   }
 }
 

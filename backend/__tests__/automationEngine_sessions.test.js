@@ -10,6 +10,12 @@ jest.mock('../invoiceStore')
 jest.mock('../automation/site1')
 jest.mock('../automation/site2')
 jest.mock('playwright')
+jest.mock('../output/pdfGenerator', () => ({
+  generatePDF: jest.fn().mockResolvedValue('mock-pdf-path')
+}))
+jest.mock('../output/xlsxGenerator', () => ({
+  generateXLSX: jest.fn().mockReturnValue('mock-xlsx-path')
+}))
 
 describe('Automation Engine Session Saving', () => {
   let mockPage
