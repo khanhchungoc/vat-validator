@@ -31,8 +31,36 @@ test('returns error for XML missing required fields', () => {
   expect(result.error).toContain('Missing fields')
 })
 
-test('handles edge case of 0 values and leading zeros', () => {
+test('handles edge case of positive decimal values and leading zeros', () => {
   const xml = `
+  <HDon>
+    <DLHDon>
+      <TTChung>
+        <KHHDon>C26MGG</KHHDon>
+        <SHDon>0001234</SHDon>
+      </TTChung>
+      <NDHDon>
+        <NBan>
+          <Ten>Test</Ten>
+          <MST>012345</MST>
+          <DChi>Test Address</DChi>
+        </NBan>
+        <TToan>
+          <TgTTTBSo>123.45</TgTTTBSo>
+        </TToan>
+      </NDHDon>
+    </DLHDon>
+  </HDon>
+  `
+  const result = parseInvoiceXML(xml, 'edge.xml')
+  expect(result.ok).toBe(true)
+  expect(result.invoice.invoiceNumber).toBe('0001234')
+  expect(result.invoice.taxId).toBe('012345')
+  expect(result.invoice.totalAmount).toBe(123.45)
+})
+
+test('returns error for invalid total amount (non-numeric, zero, or negative)', () => {
+  const xmlZero = `
   <HDon>
     <DLHDon>
       <TTChung>
@@ -52,9 +80,18 @@ test('handles edge case of 0 values and leading zeros', () => {
     </DLHDon>
   </HDon>
   `
-  const result = parseInvoiceXML(xml, 'edge.xml')
-  expect(result.ok).toBe(true)
-  expect(result.invoice.invoiceNumber).toBe('0001234')
-  expect(result.invoice.taxId).toBe('012345')
-  expect(result.invoice.totalAmount).toBe(0)
+  const xmlNegative = xmlZero.replace('<TgTTTBSo>0</TgTTTBSo>', '<TgTTTBSo>-50</TgTTTBSo>')
+  const xmlNonNumeric = xmlZero.replace('<TgTTTBSo>0</TgTTTBSo>', '<TgTTTBSo>abc</TgTTTBSo>')
+
+  const resZero = parseInvoiceXML(xmlZero, 'zero.xml')
+  expect(resZero.ok).toBe(false)
+  expect(resZero.error).toContain('Invalid total amount')
+
+  const resNegative = parseInvoiceXML(xmlNegative, 'negative.xml')
+  expect(resNegative.ok).toBe(false)
+  expect(resNegative.error).toContain('Invalid total amount')
+
+  const resNonNumeric = parseInvoiceXML(xmlNonNumeric, 'nonnumeric.xml')
+  expect(resNonNumeric.ok).toBe(false)
+  expect(resNonNumeric.error).toContain('Invalid total amount')
 })

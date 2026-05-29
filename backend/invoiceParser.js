@@ -32,6 +32,11 @@ function parseInvoiceXML(xmlContent, filename) {
       return { ok: false, error: `${filename}: Missing fields: ${missing.join(', ')}` }
     }
 
+    const totalAmount = Number(payment.TgTTTBSo)
+    if (isNaN(totalAmount) || totalAmount <= 0) {
+      return { ok: false, error: `${filename}: Invalid total amount (TgTTTBSo is non-numeric or <= 0)` }
+    }
+
     return {
       ok: true,
       invoice: {
@@ -43,7 +48,7 @@ function parseInvoiceXML(xmlContent, filename) {
         sellerName: seller.Ten,
         taxId: seller.MST,
         sellerAddress: seller.DChi,
-        totalAmount: Number(payment.TgTTTBSo),
+        totalAmount,
         status: 'pending'
       }
     }

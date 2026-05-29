@@ -3,39 +3,70 @@ import { useEffect, useRef } from 'react'
 export function useWebSocket(onMessage) {
   const ws = useRef(null)
   const onMessageRef = useRef(onMessage)
-  
-  // Always update the ref with the latest callback on every render
+  const reconnectTimer = useRef(null)
+
   useEffect(() => {
     onMessageRef.current = onMessage
   }, [onMessage])
 
   useEffect(() => {
-    ws.current = new WebSocket('ws://localhost:3001')
+    function connect() {
+      if (ws.current) {
+        ws.current.close()
+      }
 
-    ws.current.onopen = () => {
-      console.log('[WS] Connected to backend')
-      ws.current.send(JSON.stringify({ type: 'ping' }))
-    }
+      console.log('[WS] Connecting to backend...')
+      if (onMessageRef.current) {
+        onMessageRef.current({ type: 'ws-status', payload: 'Connecting...' })
+      }
 
-    ws.current.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data)
-        if (onMessageRef.current) onMessageRef.current(msg)
-      } catch (e) {
-        console.error('[WS] Failed to parse message', e)
+      const socket = new WebSocket('ws://localhost:3001')
+      ws.current = socket
+
+      socket.onopen = () => {
+        console.log('[WS] Connected to backend')
+        if (onMessageRef.current) {
+          onMessageRef.current({ type: 'ws-status', payload: 'Connected ✅' })
+        }
+        socket.send(JSON.stringify({ type: 'ping' }))
+      }
+
+      socket.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data)
+          if (onMessageRef.current) onMessageRef.current(msg)
+        } catch (e) {
+          console.error('[WS] Failed to parse message', e)
+        }
+      }
+
+      socket.onerror = (err) => {
+        console.error('[WS] Socket error:', err)
+        if (onMessageRef.current) {
+          onMessageRef.current({ type: 'ws-status', payload: 'Connection Error ❌' })
+        }
+      }
+
+      socket.onclose = () => {
+        console.log('[WS] Disconnected, scheduling reconnect...')
+        if (onMessageRef.current) {
+          onMessageRef.current({ type: 'ws-status', payload: 'Disconnected ❌' })
+        }
+        reconnectTimer.current = setTimeout(connect, 3000)
       }
     }
 
-    ws.current.onclose = () => {
-      console.log('[WS] Disconnected')
-    }
+    connect()
 
     return () => {
+      if (reconnectTimer.current) {
+        clearTimeout(reconnectTimer.current)
+      }
       if (ws.current) {
         ws.current.close()
       }
     }
-  }, []) // Empty dependency array ensures we only connect ONCE
+  }, [])
 
   const send = (msg) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {

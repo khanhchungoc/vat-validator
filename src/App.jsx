@@ -10,6 +10,9 @@ export default function App() {
   const [wsStatus, setWsStatus] = useState('Connecting...')
 
   const handleWsMessage = useCallback((msg) => {
+    if (msg.type === 'ws-status') {
+      setWsStatus(msg.payload)
+    }
     if (msg.type === 'pong') {
       setWsStatus('Connected ✅')
     }
