@@ -16,7 +16,11 @@ test('handleMessage ping', () => {
 
 test('handleMessage add-manual-invoice success', () => {
   const ws = {
-    send: jest.fn()
+    send: jest.fn(),
+    readyState: 1
+  }
+  const wss = {
+    clients: [ws]
   }
   const payload = {
     invoiceCode: 'A12BCD',
@@ -26,7 +30,7 @@ test('handleMessage add-manual-invoice success', () => {
     sellerAddress: '123 Main St',
     totalAmount: 150.5
   }
-  handleMessage(ws, { type: 'add-manual-invoice', payload })
+  handleMessage(ws, { type: 'add-manual-invoice', payload }, wss)
 
   expect(ws.send).toHaveBeenCalledTimes(1)
   const response = JSON.parse(ws.send.mock.calls[0][0])
@@ -71,7 +75,11 @@ test('handleMessage add-manual-invoice missing fields', () => {
 
 test('handleMessage add-manual-invoice duplicate error', () => {
   const ws = {
-    send: jest.fn()
+    send: jest.fn(),
+    readyState: 1
+  }
+  const wss = {
+    clients: [ws]
   }
   const payload = {
     invoiceCode: 'DUP123',
@@ -83,7 +91,7 @@ test('handleMessage add-manual-invoice duplicate error', () => {
   }
 
   // Add once successfully
-  handleMessage(ws, { type: 'add-manual-invoice', payload })
+  handleMessage(ws, { type: 'add-manual-invoice', payload }, wss)
   expect(store.getInvoices()).toHaveLength(1)
 
   // Try to add again

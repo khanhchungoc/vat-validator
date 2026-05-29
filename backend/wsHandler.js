@@ -44,7 +44,7 @@ function handleMessage(ws, msg, wss) {
       if (!result.ok) {
         ws.send(JSON.stringify({ type: 'error', payload: result.error }))
       } else {
-        ws.send(JSON.stringify({ type: 'invoice-added', payload: invoice }))
+        broadcast(wss, { type: 'invoice-added', payload: invoice })
       }
       break
     }
