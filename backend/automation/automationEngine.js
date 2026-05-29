@@ -2,6 +2,7 @@ const { chromium } = require('playwright')
 const { runSite1 } = require('./site1')
 const { runSite2 } = require('./site2')
 const { getInvoices, updateInvoiceStatus } = require('../invoiceStore')
+const { saveSession } = require('../sessionManager')
 const fs = require('fs')
 const path = require('path')
 
@@ -70,6 +71,7 @@ async function startProcessing(sessionDir, mode = 'auto') {
 
       updateInvoiceStatus(invoice.id, 'processing')
       broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: 'processing' } })
+      saveSession(sessionDir, getInvoices())
 
       let finalStatus = 'pass'
       let site1Screenshot = null
@@ -99,6 +101,7 @@ async function startProcessing(sessionDir, mode = 'auto') {
 
       updateInvoiceStatus(invoice.id, finalStatus, { site1Screenshot, site2Screenshot })
       broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: finalStatus, site1Screenshot, site2Screenshot } })
+      saveSession(sessionDir, getInvoices())
 
       await waitForStep()
     }
@@ -113,7 +116,9 @@ async function startProcessing(sessionDir, mode = 'auto') {
     isRunning = false
     captchaResolve = null
     stepResolve = null
-    currentSessionDir = null
+    if (currentSessionDir) {
+      saveSession(currentSessionDir, getInvoices())
+    }
     broadcast({ type: 'batch-complete' })
   }
 }

@@ -12,6 +12,9 @@ export default function App() {
   const [captchaData, setCaptchaData] = useState(null)
   const [wsStatus, setWsStatus] = useState('Connecting...')
   const [currentSessionDir, setCurrentSessionDir] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [processingMode, setProcessingMode] = useState('auto')
+  const [isStepWaiting, setIsStepWaiting] = useState(false)
 
   const handleWsMessage = useCallback((msg) => {
     if (msg.type === 'ws-status') {
@@ -22,20 +25,29 @@ export default function App() {
     }
     if (msg.type === 'invoice-added') {
       setInvoices(prev => {
-        // Prevent duplicate local additions just in case
         if (prev.some(i => i.id === msg.payload.id)) return prev
         return [...prev, msg.payload]
       })
     }
     if (msg.type === 'invoice-status') {
+      setIsProcessing(true) // If we get status updates, we are processing
       setInvoices(prev => prev.map(inv => 
         inv.id === msg.payload.id ? { ...inv, ...msg.payload } : inv
       ))
-      // Clear captcha if it was for this invoice
       setCaptchaData(prev => (prev && prev.id === msg.payload.id) ? null : prev)
     }
     if (msg.type === 'captcha-required') {
       setCaptchaData(msg.payload)
+    }
+    if (msg.type === 'step-waiting') {
+      setIsStepWaiting(true)
+    }
+    if (msg.type === 'batch-complete') {
+      setIsProcessing(false)
+      setIsStepWaiting(false)
+    }
+    if (msg.type === 'mode-changed') {
+      setProcessingMode(msg.payload)
     }
     if (msg.type === 'error') {
       alert(msg.payload)
@@ -63,7 +75,7 @@ export default function App() {
     if (sent) {
       setShowManualForm(false)
     } else {
-      alert('Failed to send manual invoice: WebSocket is disconnected. Please check your connection and try again.')
+      alert('Failed to send manual invoice: WebSocket is disconnected.')
     }
   }, [send])
 
@@ -121,8 +133,27 @@ export default function App() {
         return
       }
     }
+    setProcessingMode(mode)
+    setIsProcessing(true)
     send({ type: 'start-processing', payload: { sessionDir, mode } })
   }, [currentSessionDir, send])
+
+  const handleStopProcessing = useCallback(() => {
+    send({ type: 'stop-processing' })
+    setIsProcessing(false)
+    setIsStepWaiting(false)
+  }, [send])
+
+  const handleAdvanceStep = useCallback(() => {
+    send({ type: 'advance-step' })
+    setIsStepWaiting(false)
+  }, [send])
+
+  const handleToggleMode = useCallback(() => {
+    const newMode = processingMode === 'auto' ? 'paused' : 'auto'
+    send({ type: 'set-mode', payload: { mode: newMode } })
+    // Note: setProcessingMode is called by the ws message 'mode-changed'
+  }, [send, processingMode])
 
   return (
     <div className="app">
@@ -131,19 +162,55 @@ export default function App() {
         <span className="ws-status">{wsStatus}</span>
       </header>
       <main className="app-main">
-        <ResumePanel onResume={handleResume} />
-        <DropZone onFilesUploaded={handleFilesUploaded} />
-        <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-          <button className="btn-primary" onClick={() => handleStartProcessing('auto')}>
-            🚀 Start Batch
-          </button>
-          <button 
-            className="btn-secondary" 
-            onClick={() => setShowManualForm(true)}
-          >
-            + Add Invoice Manually
-          </button>
+        {!currentSessionDir && invoices.length === 0 && (
+          <ResumePanel onResume={handleResume} />
+        )}
+        
+        <DropZone onFilesUploaded={handleFilesUploaded} disabled={isProcessing} />
+        
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
+          {!isProcessing ? (
+            <>
+              <button 
+                className="btn-primary" 
+                onClick={() => handleStartProcessing('auto')}
+                disabled={invoices.length === 0}
+              >
+                🚀 Start Batch
+              </button>
+              <button 
+                className="btn-secondary" 
+                onClick={() => handleStartProcessing('step')}
+                disabled={invoices.length === 0}
+              >
+                👣 Start in Step Mode
+              </button>
+              <button 
+                className="btn-secondary" 
+                onClick={() => setShowManualForm(true)}
+              >
+                + Add Invoice Manually
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn-stop" onClick={handleStopProcessing}>
+                🛑 Stop
+              </button>
+              
+              {processingMode === 'step' || isStepWaiting ? (
+                <button className="btn-primary" onClick={handleAdvanceStep}>
+                  ⏩ Step Next
+                </button>
+              ) : null}
+
+              <button className="btn-secondary" onClick={handleToggleMode}>
+                {processingMode === 'auto' ? '⏸️ Pause after this' : '▶️ Resume Auto'}
+              </button>
+            </>
+          )}
         </div>
+
         <InvoiceQueue invoices={invoices} />
       </main>
       {showManualForm && (

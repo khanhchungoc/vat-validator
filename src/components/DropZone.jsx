@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 
-export default function DropZone({ onFilesUploaded }) {
+export default function DropZone({ onFilesUploaded, disabled }) {
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef()
 
   async function uploadFiles(files) {
+    if (disabled) return
     const xmlFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.xml'))
     if (xmlFiles.length === 0) return
 
@@ -33,11 +34,18 @@ export default function DropZone({ onFilesUploaded }) {
 
   return (
     <div
-      className={`dropzone ${dragging ? 'dragging' : ''}`}
-      onDragOver={e => { e.preventDefault(); setDragging(true) }}
+      className={`dropzone ${dragging ? 'dragging' : ''} ${disabled ? 'disabled' : ''}`}
+      onDragOver={e => { 
+        e.preventDefault()
+        if (!disabled) setDragging(true) 
+      }}
       onDragLeave={() => setDragging(false)}
-      onDrop={e => { e.preventDefault(); setDragging(false); uploadFiles(e.dataTransfer.files) }}
-      onClick={() => inputRef.current.click()}
+      onDrop={e => { 
+        e.preventDefault()
+        setDragging(false)
+        if (!disabled) uploadFiles(e.dataTransfer.files) 
+      }}
+      onClick={() => !disabled && inputRef.current.click()}
     >
       <input 
         ref={inputRef} 
@@ -47,13 +55,17 @@ export default function DropZone({ onFilesUploaded }) {
         hidden
         onClick={e => e.stopPropagation()}
         onChange={e => {
-          uploadFiles(e.target.files)
-          e.target.value = ''
+          if (!disabled) {
+            uploadFiles(e.target.files)
+            e.target.value = ''
+          }
         }} 
       />
       {uploading
         ? <p>Uploading...</p>
-        : <p>📂 Drop XML files here or click to browse</p>}
+        : disabled 
+          ? <p>🔒 Processing active...</p>
+          : <p>📂 Drop XML files here or click to browse</p>}
     </div>
   )
 }

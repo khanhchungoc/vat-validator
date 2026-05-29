@@ -58,6 +58,14 @@ body {
 }
 .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
 
+.btn-stop {
+  background: rgba(239, 68, 68, 0.1); border: 1px solid var(--fail);
+  padding: 10px 20px; border-radius: 8px; color: var(--fail);
+  cursor: pointer; font-weight: 600; font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-stop:hover { background: var(--fail); color: white; }
+
 .dropzone {
   border: 2px dashed var(--glass-border);
   border-radius: var(--radius);
@@ -69,10 +77,15 @@ body {
   color: var(--text-muted);
   margin-bottom: 16px;
 }
-.dropzone.dragging, .dropzone:hover {
+.dropzone.dragging, .dropzone:not(.disabled):hover {
   border-color: var(--accent);
   background: rgba(59, 130, 246, 0.1);
   color: var(--text-main);
+}
+.dropzone.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-style: solid;
 }
 
 .dropzone * {
