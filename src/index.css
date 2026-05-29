@@ -131,5 +131,20 @@ body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 8px;
+}
+
+/* Custom scrollbar properties for flex container scrolling */
+.app-main::-webkit-scrollbar {
+  width: 6px;
+}
+.app-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+.app-main::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 20px;
+}
+.app-main::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
