@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, dialog } = require('electron')
 const path = require('path')
 const { spawn } = require('child_process')
 
@@ -11,7 +11,7 @@ function getBackendPath() {
 
 function getNodePath() {
   if (isDev) return 'node'
-  return process.execPath.replace('VATOCR.exe', 'node.exe')
+  return path.join(path.dirname(process.execPath), 'node.exe')
 }
 
 let backendProcess = null
@@ -26,7 +26,15 @@ function startBackend() {
       OUTPUT_DIR: path.join(app.getPath('documents'), 'VATOCR', 'output')
     }
   })
-  backendProcess.on('error', (err) => console.error('[Electron] Backend error:', err))
+  backendProcess.on('error', (err) => {
+    console.error('[Electron] Backend error:', err)
+    if (!isDev) {
+      dialog.showErrorBox(
+        'Backend Validator Service Failure',
+        `Failed to start the background validator service:\n${err.message}\n\nPlease try reinstalling or running the application as Administrator.`
+      )
+    }
+  })
 }
 
 function createWindow() {
@@ -61,4 +69,8 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (backendProcess) backendProcess.kill()
   if (process.platform !== 'darwin') app.quit()
+})
+
+process.on('exit', () => {
+  if (backendProcess) backendProcess.kill()
 })

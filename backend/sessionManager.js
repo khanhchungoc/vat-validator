@@ -6,7 +6,8 @@ const OUTPUT_DIR = process.env.OUTPUT_DIR || path.join(process.cwd(), 'output')
 function validateDir(dir) {
   if (!dir || typeof dir !== 'string') return false
   const absolute = path.resolve(dir)
-  return absolute.startsWith(path.resolve(OUTPUT_DIR))
+  const base = path.resolve(OUTPUT_DIR)
+  return absolute === base || absolute.startsWith(base + path.sep)
 }
 
 function getTimestamp() {
