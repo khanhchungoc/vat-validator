@@ -4,12 +4,14 @@ import DropZone from './components/DropZone'
 import ManualEntryForm from './components/ManualEntryForm'
 import InvoiceQueue from './components/InvoiceQueue'
 import CaptchaModal from './components/CaptchaModal'
+import ResumePanel from './components/ResumePanel'
 
 export default function App() {
   const [invoices, setInvoices] = useState([])
   const [showManualForm, setShowManualForm] = useState(false)
   const [captchaData, setCaptchaData] = useState(null)
   const [wsStatus, setWsStatus] = useState('Connecting...')
+  const [currentSessionDir, setCurrentSessionDir] = useState(null)
 
   const handleWsMessage = useCallback((msg) => {
     if (msg.type === 'ws-status') {
@@ -82,6 +84,46 @@ export default function App() {
     setCaptchaData(null)
   }, [send, captchaData])
 
+  const handleResume = useCallback(async (sessionDir) => {
+    try {
+      const res = await fetch('http://localhost:3001/sessions/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionDir })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setInvoices(data.invoices)
+        setCurrentSessionDir(sessionDir)
+      } else {
+        alert(data.error || 'Failed to resume session')
+      }
+    } catch (e) {
+      alert('Failed to resume session')
+    }
+  }, [])
+
+  const handleStartProcessing = useCallback(async (mode = 'auto') => {
+    let sessionDir = currentSessionDir
+    if (!sessionDir) {
+      try {
+        const res = await fetch('http://localhost:3001/sessions/new', { method: 'POST' })
+        const data = await res.json()
+        if (res.ok) {
+          sessionDir = data.sessionDir
+          setCurrentSessionDir(sessionDir)
+        } else {
+          alert('Failed to create session: ' + (data.error || 'Unknown error'))
+          return
+        }
+      } catch (e) {
+        alert('Failed to create session')
+        return
+      }
+    }
+    send({ type: 'start-processing', payload: { sessionDir, mode } })
+  }, [currentSessionDir, send])
+
   return (
     <div className="app">
       <header className="app-header">
@@ -89,14 +131,19 @@ export default function App() {
         <span className="ws-status">{wsStatus}</span>
       </header>
       <main className="app-main">
+        <ResumePanel onResume={handleResume} />
         <DropZone onFilesUploaded={handleFilesUploaded} />
-        <button 
-          className="btn-secondary" 
-          style={{ alignSelf: 'flex-start', marginTop: 8 }}
-          onClick={() => setShowManualForm(true)}
-        >
-          + Add Invoice Manually
-        </button>
+        <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+          <button className="btn-primary" onClick={() => handleStartProcessing('auto')}>
+            🚀 Start Batch
+          </button>
+          <button 
+            className="btn-secondary" 
+            onClick={() => setShowManualForm(true)}
+          >
+            + Add Invoice Manually
+          </button>
+        </div>
         <InvoiceQueue invoices={invoices} />
       </main>
       {showManualForm && (

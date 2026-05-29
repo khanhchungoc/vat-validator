@@ -160,3 +160,17 @@ body {
 .app-main::-webkit-scrollbar-thumb:hover {
   background: var(--accent);
 }
+
+.resume-panel {
+  background: var(--glass); border: 1px solid var(--accent);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 24px;
+}
+.resume-panel h3 { margin-bottom: 14px; font-size: 0.95rem; }
+.resume-card {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--glass-border);
+}
+.resume-card:last-child { border-bottom: none; }
+.resume-info { display: flex; flex-direction: column; }
+.resume-id { font-weight: 500; font-size: 0.9rem; color: var(--text-main); }
+.resume-progress { font-size: 0.78rem; color: var(--text-muted); }
