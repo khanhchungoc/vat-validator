@@ -239,3 +239,15 @@ body {
 .error-banner-content p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
 .error-banner-actions { display: flex; gap: 10px; flex-shrink: 0; }
 
+.step-button {
+  display: block; width: 100%; margin: 16px 0;
+  padding: 14px; background: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: white; border: none; border-radius: var(--radius);
+  font-family: inherit; font-size: 1rem; font-weight: 600;
+  cursor: pointer; animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.75; }
+}
+
+

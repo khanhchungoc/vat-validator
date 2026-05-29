@@ -8,6 +8,10 @@ import ResumePanel from './components/ResumePanel'
 import DownloadButtons from './components/DownloadButtons'
 import DuplicateWarning from './components/DuplicateWarning'
 import ErrorBanner from './components/ErrorBanner'
+import ModeToggle from './components/ModeToggle'
+import ProgressBar from './components/ProgressBar'
+import StepButton from './components/StepButton'
+
 
 
 export default function App() {
@@ -196,11 +200,12 @@ export default function App() {
     setIsStepWaiting(false)
   }, [send])
 
-  const handleToggleMode = useCallback(() => {
-    const newMode = processingMode === 'auto' ? 'paused' : 'auto'
-    send({ type: 'set-mode', payload: { mode: newMode } })
-    // Note: setProcessingMode is called by the ws message 'mode-changed'
-  }, [send, processingMode])
+  const handleModeChange = useCallback((newMode) => {
+    setProcessingMode(newMode)
+    if (isProcessing) {
+      send({ type: 'set-mode', payload: { mode: newMode === 'step' ? 'paused' : 'auto' } })
+    }
+  }, [isProcessing, send])
 
   return (
     <div className="app">
@@ -215,23 +220,21 @@ export default function App() {
         
         <DropZone onFilesUploaded={handleFilesUploaded} disabled={isProcessing} />
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginTop: 12 }}>
           {!isProcessing ? (
             <>
               <button 
                 className="btn-primary" 
-                onClick={() => handleStartProcessing('auto')}
+                onClick={() => handleStartProcessing(processingMode)}
                 disabled={invoices.length === 0}
               >
-                🚀 Start Batch
+                🚀 Start Processing
               </button>
-              <button 
-                className="btn-secondary" 
-                onClick={() => handleStartProcessing('step')}
-                disabled={invoices.length === 0}
-              >
-                👣 Start in Step Mode
-              </button>
+              <ModeToggle 
+                mode={processingMode} 
+                onChange={handleModeChange} 
+                disabled={invoices.length === 0} 
+              />
               <button 
                 className="btn-secondary" 
                 onClick={() => setShowManualForm(true)}
@@ -244,19 +247,17 @@ export default function App() {
               <button className="btn-stop" onClick={handleStopProcessing}>
                 🛑 Stop
               </button>
-              
-              {processingMode === 'step' || isStepWaiting ? (
-                <button className="btn-primary" onClick={handleAdvanceStep}>
-                  ⏩ Step Next
-                </button>
-              ) : null}
-
-              <button className="btn-secondary" onClick={handleToggleMode}>
-                {processingMode === 'auto' ? '⏸️ Pause after this' : '▶️ Resume Auto'}
-              </button>
+              <ModeToggle 
+                mode={processingMode} 
+                onChange={handleModeChange} 
+                disabled={false} 
+              />
             </>
           )}
         </div>
+
+        <StepButton visible={isProcessing && isStepWaiting} onStep={handleAdvanceStep} />
+        <ProgressBar invoices={invoices} />
 
         <ErrorBanner error={processingError} onRetry={handleRetry} onSkip={handleErrorSkip} />
         <InvoiceQueue invoices={invoices} />
