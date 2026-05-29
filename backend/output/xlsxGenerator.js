@@ -1,4 +1,4 @@
-const XLSX = require('xlsx')
+const XLSX = require('xlsx-js-style')
 const path = require('path')
 const fs = require('fs')
 
@@ -11,11 +11,11 @@ const STATUS_LABELS = {
 }
 
 const STATUS_FILLS = {
-  pass: { fgColor: { argb: 'FF90EE90' } },           // light green
-  'invalid-invoice': { fgColor: { argb: 'FFFF9999' } }, // light red
-  'invalid-business': { fgColor: { argb: 'FFFF9999' } },
-  skipped: { fgColor: { argb: 'FFFFE066' } },          // light yellow
-  pending: { fgColor: { argb: 'FFFFFFFF' } }
+  pass: { patternType: 'solid', fgColor: { argb: 'FF90EE90' } },           // light green
+  'invalid-invoice': { patternType: 'solid', fgColor: { argb: 'FFFF9999' } }, // light red
+  'invalid-business': { patternType: 'solid', fgColor: { argb: 'FFFF9999' } },
+  skipped: { patternType: 'solid', fgColor: { argb: 'FFFFE066' } },          // light yellow
+  pending: { patternType: 'solid', fgColor: { argb: 'FFFFFFFF' } }
 }
 
 /**
@@ -39,11 +39,33 @@ function generateXLSX(sessionDir, invoices) {
 
   const wsData = [header, ...rows]
   const ws = XLSX.utils.aoa_to_sheet(wsData)
+  
+  // Apply column widths
   ws['!cols'] = [ { wch: 4 }, { wch: 14 }, { wch: 16 }, { wch: 45 }, { wch: 18 }, { wch: 16 }, { wch: 20 } ]
 
-  // Note: Standard 'xlsx' (Community Edition) does NOT support cell styles (colors, fonts).
-  // For styles, a package like 'xlsx-js-style' or 'exceljs' would be needed.
-  // We're keeping the STATUS_FILLS structure here for future compatibility if we switch libraries.
+  // Apply header styling
+  const range = XLSX.utils.decode_range(ws['!ref'])
+  for (let C = range.s.c; C <= range.e.c; ++C) {
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: C })
+    if (!ws[cellRef]) continue
+    ws[cellRef].s = {
+      font: { bold: true, color: { argb: 'FFFFFFFF' } },
+      fill: { patternType: 'solid', fgColor: { argb: 'FF4472C4' } },
+      alignment: { horizontal: 'center' }
+    }
+  }
+
+  // Apply row styling based on status
+  invoices.forEach((inv, i) => {
+    const rowIdx = i + 1
+    const fill = STATUS_FILLS[inv.status] || STATUS_FILLS.pending
+    
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: C })
+      if (!ws[cellRef]) continue
+      ws[cellRef].s = { fill }
+    }
+  })
 
   XLSX.utils.book_append_sheet(wb, ws, 'Summary')
   const outputPath = path.join(sessionDir, 'summary.xlsx')

@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const { generateXLSX } = require('../output/xlsxGenerator')
-const XLSX = require('xlsx')
+const XLSX = require('xlsx-js-style')
 
 describe('xlsxGenerator', () => {
   const testDir = path.join(__dirname, 'test-output')
