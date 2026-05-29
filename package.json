@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "7zip-bin": "^5.2.0",
     "express": "^5.2.1",
     "fast-xml-parser": "^5.8.0",
     "multer": "^2.1.1",
@@ -53,7 +54,9 @@
       {
         "from": "backend",
         "to": "backend",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
