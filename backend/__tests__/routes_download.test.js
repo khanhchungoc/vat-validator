@@ -65,6 +65,23 @@ describe('Download Routes Logic', () => {
       )
       expect(res.status).not.toHaveBeenCalled()
     })
+
+    test('returns 400 if session ID is invalid (e.g. contains path traversal or special chars)', () => {
+      const handler = getHandler('GET', '/pdf/:sessionId')
+      const invalidSessionIds = ['../session-123', 'session/123', 'session?123', 'session*123', 'session#123']
+
+      invalidSessionIds.forEach(invalidId => {
+        jest.clearAllMocks()
+        req.params.sessionId = invalidId
+
+        handler(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(400)
+        expect(res.json).toHaveBeenCalledWith({ error: 'Invalid session ID' })
+        expect(fs.existsSync).not.toHaveBeenCalled()
+        expect(res.download).not.toHaveBeenCalled()
+      })
+    })
   })
 
   describe('GET /xlsx/:sessionId', () => {
@@ -96,6 +113,23 @@ describe('Download Routes Logic', () => {
         'vatocr-summary-test-session-456.xlsx'
       )
       expect(res.status).not.toHaveBeenCalled()
+    })
+
+    test('returns 400 if session ID is invalid (e.g. contains path traversal or special chars)', () => {
+      const handler = getHandler('GET', '/xlsx/:sessionId')
+      const invalidSessionIds = ['../session-123', 'session/123', 'session?123', 'session*123', 'session#123']
+
+      invalidSessionIds.forEach(invalidId => {
+        jest.clearAllMocks()
+        req.params.sessionId = invalidId
+
+        handler(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(400)
+        expect(res.json).toHaveBeenCalledWith({ error: 'Invalid session ID' })
+        expect(fs.existsSync).not.toHaveBeenCalled()
+        expect(res.download).not.toHaveBeenCalled()
+      })
     })
   })
 })
