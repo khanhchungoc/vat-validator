@@ -209,14 +209,21 @@ export default function App() {
   }, [send])
 
   const handleAdvanceStep = useCallback(() => {
-    send({ type: 'advance-step' })
-    setIsStepWaiting(false)
+    const sent = send({ type: 'advance-step' })
+    if (!sent) {
+      alert('Failed to advance step: WebSocket is disconnected.')
+    } else {
+      setIsStepWaiting(false)
+    }
   }, [send])
 
   const handleModeChange = useCallback((newMode) => {
     setProcessingMode(newMode)
     if (isProcessing) {
-      send({ type: 'set-mode', payload: { mode: newMode === 'step' ? 'paused' : 'auto' } })
+      const sent = send({ type: 'set-mode', payload: { mode: newMode === 'step' ? 'paused' : 'auto' } })
+      if (!sent) {
+        alert('Failed to update mode: WebSocket is disconnected.')
+      }
     }
   }, [isProcessing, send])
 
