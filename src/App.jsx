@@ -31,6 +31,11 @@ export default function App() {
   const handleWsMessage = useCallback((msg) => {
     if (msg.type === 'ws-status') {
       setWsStatus(msg.payload)
+      if (msg.payload.includes('Disconnected') || msg.payload.includes('Error')) {
+        setIsProcessing(false)
+        setIsStepWaiting(false)
+        setCaptchaData(null)
+      }
     }
     if (msg.type === 'pong') {
       setWsStatus('Connected ✅')
@@ -186,13 +191,21 @@ export default function App() {
     }
     setProcessingMode(mode)
     setIsProcessing(true)
-    send({ type: 'start-processing', payload: { sessionDir, mode } })
+    const sent = send({ type: 'start-processing', payload: { sessionDir, mode } })
+    if (!sent) {
+      alert('Failed to start processing: WebSocket is disconnected.')
+      setIsProcessing(false)
+    }
   }, [currentSessionDir, send])
 
   const handleStopProcessing = useCallback(() => {
-    send({ type: 'stop-processing' })
-    setIsProcessing(false)
-    setIsStepWaiting(false)
+    const sent = send({ type: 'stop-processing' })
+    if (!sent) {
+      alert('Failed to stop processing: WebSocket is disconnected.')
+    } else {
+      setIsProcessing(false)
+      setIsStepWaiting(false)
+    }
   }, [send])
 
   const handleAdvanceStep = useCallback(() => {
