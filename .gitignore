@@ -2,5 +2,5 @@ node_modules/
 dist/
 out/
 .vite/
-output/
+/output/
 .superpowers/
