@@ -37,15 +37,24 @@
   "build": {
     "appId": "com.vatocr.app",
     "productName": "VATOCR",
+    "copyright": "Copyright © 2026",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "assets"
     },
     "files": [
-      "dist/**",
-      "electron/**",
-      "backend/**",
-      "node_modules/**",
+      "dist/**/*",
+      "electron/**/*",
+      "backend/**/*",
+      "node_modules/**/*",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend",
+        "filter": ["**/*"]
+      }
     ],
     "win": {
       "target": "nsis",
@@ -53,13 +62,12 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    },
-    "extraResources": [
-      {
-        "from": "node_modules/playwright",
-        "to": "playwright"
-      }
-    ]
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }
