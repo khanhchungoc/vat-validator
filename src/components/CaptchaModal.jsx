@@ -1,13 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip }) {
   const [answer, setAnswer] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const inputRef = useRef(null)
 
   // Reset loading state and clear input when a new CAPTCHA image or attempt arrives
   useEffect(() => {
     setIsSubmitting(false)
     setAnswer('')
+    // Wait a brief tick to ensure input is re-enabled before trying to focus it
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus()
+      }
+    }, 50)
   }, [imageBase64, attempt])
 
   function handleSubmit(e) {
@@ -65,6 +72,7 @@ export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip })
 
         <form onSubmit={handleSubmit}>
           <input
+            ref={inputRef}
             autoFocus
             type="text"
             className="mock-input"
@@ -120,14 +128,7 @@ export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip })
           </div>
         </form>
       </div>
-      
-      {/* Styles for spinner keyframes */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }
+
