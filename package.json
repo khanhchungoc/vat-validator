@@ -63,7 +63,7 @@
     "win": {
       "target": [
         "nsis",
-        "portable"
+        "dir"
       ],
       "icon": "assets/icon.ico"
     },
