@@ -4,8 +4,8 @@ const path = require('path')
 const isDev = !app.isPackaged
 
 function getBackendPath() {
-  if (isDev) return path.join(__dirname, '../backend/index.js')
-  return path.join(process.resourcesPath, 'backend/index.js')
+  // __dirname resolves inside app.asar in production, where node_modules also live
+  return path.join(__dirname, '../backend/index.js')
 }
 
 function startBackend() {
