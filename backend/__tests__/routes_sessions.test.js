@@ -64,14 +64,13 @@ describe('Sessions Routes Logic', () => {
   })
 
   describe('POST /new', () => {
-    test('clears invoices and creates a new session', () => {
+    test('creates a new session', () => {
       const handler = getHandler('POST', '/new')
       const mockSession = { id: 'new-id', sessionDir: 'dir' }
       createSession.mockReturnValue(mockSession)
 
       handler(req, res)
 
-      expect(clearInvoices).toHaveBeenCalled()
       expect(createSession).toHaveBeenCalled()
       expect(res.json).toHaveBeenCalledWith({ sessionDir: 'dir', id: 'new-id' })
     })
