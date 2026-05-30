@@ -3,6 +3,12 @@ const path = require('path')
 
 const isDev = !app.isPackaged
 
+// Ensure only one instance runs — a second launch focuses the existing window
+const gotLock = app.requestSingleInstanceLock()
+if (!gotLock) {
+  app.quit()
+}
+
 function getBackendPath() {
   // __dirname resolves inside app.asar in production, where node_modules also live
   return path.join(__dirname, '../backend/index.js')
@@ -59,10 +65,22 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Catch async errors (e.g. EADDRINUSE from server.listen) that bypass try-catch
+  process.on('uncaughtException', (err) => {
+    console.error('[Electron] Uncaught exception:', err)
+    showErrorWindow(err)
+  })
+
   startBackend()
   setTimeout(createWindow, isDev ? 1000 : 2000)
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+
+  // Focus existing window if a second instance tries to launch
+  app.on('second-instance', () => {
+    const win = BrowserWindow.getAllWindows()[0]
+    if (win) { if (win.isMinimized()) win.restore(); win.focus() }
   })
 })
 
