@@ -89,6 +89,8 @@ async function startProcessing(sessionDir, mode = 'auto') {
           if (site1Result.status === 'skipped') {
             finalStatus = 'skipped'
           } else {
+            // Site 1 passed! Close the CAPTCHA modal immediately
+            broadcast({ type: 'captcha-success', payload: { id: invoice.id } })
             site1Screenshot = saveScreenshot(sessionDir, invoice.id, 1, site1Result.screenshotBase64)
             if (site1Result.status === 'invalid-invoice') {
               finalStatus = 'invalid-invoice'

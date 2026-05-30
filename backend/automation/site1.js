@@ -76,7 +76,7 @@ async function runSite1(page, invoice, onCaptcha) {
     // Fill and submit CAPTCHA
     await page.fill('input[name="captcha"], input[id*="captcha"]', answer)
     await page.click('button[type="submit"], input[type="submit"], button:has-text("Tìm kiếm")')
-    await page.waitForLoadState('networkidle', { timeout: 15000 })
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
 
     // Check for CAPTCHA failure (still on same page with error)
     const isCaptchaError = await page.$('text=Mã xác nhận không đúng, text=Sai mã captcha, .captcha-error')
@@ -89,7 +89,7 @@ async function runSite1(page, invoice, onCaptcha) {
   }
 
   // Take result screenshot
-  await page.waitForLoadState('networkidle', { timeout: 15000 })
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
   const screenshotBuffer = await page.screenshot({ fullPage: false })
   const screenshotBase64 = screenshotBuffer.toString('base64')
 

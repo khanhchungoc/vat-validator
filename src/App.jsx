@@ -64,6 +64,10 @@ export default function App() {
     }
     if (msg.type === 'processing-error') {
       setProcessingError(msg.payload.message)
+      setCaptchaData(null)
+    }
+    if (msg.type === 'captcha-success') {
+      setCaptchaData(prev => (prev && prev.id === msg.payload.id) ? null : prev)
     }
     if (msg.type === 'captcha-required') {
       setCaptchaData(msg.payload)
