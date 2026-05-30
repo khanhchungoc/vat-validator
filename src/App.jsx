@@ -24,6 +24,7 @@ import StepButton from './components/StepButton'
 export default function App() {
   const [invoices, setInvoices] = useState([])
   const [showManualForm, setShowManualForm] = useState(false)
+  const [appError, setAppError] = useState(null)
   const [captchaData, setCaptchaData] = useState(null)
   const [wsStatus, setWsStatus] = useState('Connecting...')
   const [currentSessionDir, setCurrentSessionDir] = useState(null)
@@ -83,7 +84,7 @@ export default function App() {
       setProcessingMode(msg.payload)
     }
     if (msg.type === 'error') {
-      alert(msg.payload)
+      setAppError(msg.payload)
     }
   }, [])
 
@@ -241,6 +242,20 @@ export default function App() {
         <span className="ws-status">{wsStatus}</span>
       </header>
       <main className="app-main">
+        {appError && (
+          <div style={{
+            background: 'rgba(220,53,69,0.15)', border: '1px solid #dc3545',
+            borderRadius: 8, padding: '14px 18px', marginBottom: 16,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12
+          }}>
+            <div style={{ flex: 1 }}>
+              <strong style={{ color: '#ff6b6b', display: 'block', marginBottom: 6 }}>⚠️ Processing Error</strong>
+              <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#e0e0e0', userSelect: 'text' }}>{appError}</pre>
+            </div>
+            <button onClick={() => setAppError(null)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0 }}>✕</button>
+          </div>
+        )}
+
         {!currentSessionDir && invoices.length === 0 && (
           <ResumePanel onResume={handleResume} />
         )}
