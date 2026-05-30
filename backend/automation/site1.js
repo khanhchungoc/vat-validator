@@ -22,24 +22,37 @@ async function runSite1(page, invoice, onCaptcha) {
     const captchaEl = await page.$('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
     if (!captchaEl) throw new Error('CAPTCHA element not found on Site 1')
 
-    // Scroll into view so the browser renders it
+    // Scroll the first captcha piece into view
     await captchaEl.scrollIntoViewIfNeeded()
 
-    // Wait for the image bytes to arrive
+    // Wait for image bytes to arrive
     await page.waitForFunction(
       el => el.complete && el.naturalWidth > 0 && el.naturalHeight > 0,
       captchaEl,
       { timeout: 10000 }
     ).catch(() => {})
 
-    // Give the browser extra time to fully paint the image onto the canvas
+    // Give the browser time to fully paint all image pieces
     await new Promise(r => setTimeout(r, 800))
 
-    // Use page-level clipped screenshot — captures actual painted pixels,
-    // not the element's pre-paint buffer which is what element.screenshot() uses
-    const box = await captchaEl.boundingBox()
-    const captchaBuffer = box
-      ? await page.screenshot({ clip: box })
+    // The CAPTCHA may be split across multiple img elements.
+    // Compute the union bounding box covering ALL of them so we capture the full image.
+    const captchaBox = await page.evaluate(() => {
+      const imgs = document.querySelectorAll('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
+      if (imgs.length === 0) return null
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+      imgs.forEach(img => {
+        const r = img.getBoundingClientRect()
+        minX = Math.min(minX, r.left)
+        minY = Math.min(minY, r.top)
+        maxX = Math.max(maxX, r.right)
+        maxY = Math.max(maxY, r.bottom)
+      })
+      return minX === Infinity ? null : { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+    })
+
+    const captchaBuffer = captchaBox
+      ? await page.screenshot({ clip: captchaBox })
       : await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
 
