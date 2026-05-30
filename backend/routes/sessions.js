@@ -1,6 +1,6 @@
 const express = require('express')
 const { createSession, loadSession, listIncompleteSessions, OUTPUT_DIR, validateDir } = require('../sessionManager')
-const { loadInvoices, clearInvoices } = require('../invoiceStore')
+const { loadInvoices } = require('../invoiceStore')
 const { getIsRunning } = require('../automation/automationEngine')
 const path = require('path')
 const fs = require('fs')
@@ -14,7 +14,8 @@ router.get('/', (req, res) => {
 
 // POST /sessions/new - create a new session, returns { sessionDir }
 router.post('/new', (req, res) => {
-  clearInvoices()
+  // NOTE: do NOT clear invoices here — they are added to the store BEFORE
+  // the session is created, so clearing would wipe them before processing starts.
   const session = createSession()
   if (!session) return res.status(500).json({ error: 'Failed to create session' })
   res.json({ sessionDir: session.sessionDir, id: session.id })
