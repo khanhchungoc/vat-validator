@@ -22,6 +22,14 @@ async function runSite1(page, invoice, onCaptcha) {
     const captchaEl = await page.$('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
     if (!captchaEl) throw new Error('CAPTCHA element not found on Site 1')
 
+    // Wait for the CAPTCHA image to fully load before screenshotting.
+    // The element may exist in DOM before image bytes have arrived.
+    await page.waitForFunction(
+      el => el.complete && el.naturalWidth > 0,
+      captchaEl,
+      { timeout: 10000 }
+    ).catch(() => {}) // proceed even if timeout — best effort
+
     const captchaBuffer = await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
 
