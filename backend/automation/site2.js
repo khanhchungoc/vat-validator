@@ -20,8 +20,8 @@ async function runSite2(page, invoice) {
 
   // Fill Tax ID field and submit
   await page.fill('input[name="mst"], input[id*="mst"], input[placeholder*="mã số thuế"]', rootTaxId)
-  await page.click('button[type="submit"], input[type="submit"], a:has-text("Tìm kiếm")')
-  await page.waitForLoadState('networkidle', { timeout: 15000 })
+  await page.click('input.subBtn, .subBtn, button[type="submit"], input[type="submit"], a:has-text("Tìm kiếm")')
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
 
   // Screenshot result
   const screenshotBuffer = await page.screenshot({ fullPage: false })
