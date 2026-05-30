@@ -10,6 +10,17 @@ const SITE1_URL = 'https://hoadondientu.gdt.gov.vn/'
 async function runSite1(page, invoice, onCaptcha) {
   await page.goto(SITE1_URL, { waitUntil: 'networkidle', timeout: 30000 })
 
+  // Close the annoying "CỤC THUẾ THÔNG BÁO" modal if it pops up and blocks the screen
+  try {
+    const closeBtn = await page.waitForSelector('.ant-modal-close', { timeout: 3000 })
+    if (closeBtn) {
+      await closeBtn.click()
+      await page.waitForTimeout(500) // Wait for modal fade out animation
+    }
+  } catch (err) {
+    // Ignore if modal doesn't appear
+  }
+
   // Fill form fields
   await page.fill('input[name="khhdon"], input[placeholder*="ký hiệu"], input[id*="khhdon"]', invoice.invoiceCode)
   await page.fill('input[name="shdon"], input[placeholder*="số hóa đơn"], input[id*="shdon"]', String(invoice.invoiceNumber))
