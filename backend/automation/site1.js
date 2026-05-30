@@ -29,6 +29,15 @@ async function runSite1(page, invoice, onCaptcha) {
   let attempt = 0
   while (true) {
     attempt++
+    // Close the annoying modal if it popped up late or during a retry
+    try {
+      const closeBtn = await page.$('.ant-modal-close')
+      if (closeBtn && await closeBtn.isVisible()) {
+        await closeBtn.click()
+        await page.waitForTimeout(500) // Wait for modal fade out animation
+      }
+    } catch (err) {}
+
     // Capture CAPTCHA image
     const captchaEl = await page.$('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
     if (!captchaEl) throw new Error('CAPTCHA element not found on Site 1')
