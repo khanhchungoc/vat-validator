@@ -47,6 +47,14 @@ function startBackend(port) {
     if (!isDev) {
       process.env.NODE_ENV = 'production'
       process.env.OUTPUT_DIR = path.join(app.getPath('documents'), 'VATOCR', 'output')
+      // Tell Playwright where to find its Chromium browser in the packaged app.
+      // Playwright stores browsers in AppData/Local/ms-playwright by default.
+      if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
+        process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(
+          app.getPath('appData').replace('Roaming', 'Local'),
+          'ms-playwright'
+        )
+      }
     }
     require(getBackendPath())
   } catch (err) {

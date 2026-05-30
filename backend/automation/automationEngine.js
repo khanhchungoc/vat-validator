@@ -148,11 +148,12 @@ async function startProcessing(sessionDir, mode = 'auto') {
             Promise.resolve(generateXLSX(currentSessionDir, allInvoices))
           ])
           const sessionId = require('path').basename(currentSessionDir)
+          const port = process.env.BACKEND_PORT || '3001'
           broadcast({
             type: 'batch-complete',
             payload: {
-              pdfUrl: `http://localhost:3001/download/pdf/${sessionId}`,
-              xlsxUrl: `http://localhost:3001/download/xlsx/${sessionId}`
+              pdfUrl: `http://localhost:${port}/download/pdf/${sessionId}`,
+              xlsxUrl: `http://localhost:${port}/download/xlsx/${sessionId}`
             }
           })
           generated = true
