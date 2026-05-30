@@ -110,9 +110,10 @@ async function runSite1(page, invoice, onCaptcha) {
     await page.click('button[type="submit"], input[type="submit"], button:has-text("Tìm kiếm")')
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
 
-    // Check for CAPTCHA failure (still on same page with error)
-    const isCaptchaError = await page.$('text=Mã xác nhận không đúng, text=Sai mã captcha, .captcha-error')
-    if (isCaptchaError) {
+    // Check for CAPTCHA failure (if the form is still visible, the CAPTCHA was wrong)
+    await page.waitForTimeout(1000)
+    const formIsStillVisible = await page.$('input#cvalue')
+    if (formIsStillVisible && await formIsStillVisible.isVisible()) {
       // Loop: get new CAPTCHA
       continue
     }

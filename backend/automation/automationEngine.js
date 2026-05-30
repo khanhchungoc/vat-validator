@@ -96,9 +96,13 @@ async function startProcessing(sessionDir, mode = 'auto') {
               finalStatus = 'invalid-invoice'
             } else {
               // Site 2 (only if Site 1 passed)
-              const site2Result = await runSite2(page, invoice)
-              site2Screenshot = saveScreenshot(sessionDir, invoice.id, 2, site2Result.screenshotBase64)
-              if (site2Result.status === 'invalid-business') finalStatus = 'invalid-business'
+              const site2Result = await runSite2(page, invoice, (img, att) => waitForCaptchaAnswer(invoice.id, img, att))
+              if (site2Result.status === 'skipped') {
+                finalStatus = 'skipped'
+              } else {
+                site2Screenshot = saveScreenshot(sessionDir, invoice.id, 2, site2Result.screenshotBase64)
+                if (site2Result.status === 'invalid-business') finalStatus = 'invalid-business'
+              }
             }
           }
           break // break retry loop if successful
