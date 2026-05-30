@@ -22,15 +22,25 @@ async function runSite1(page, invoice, onCaptcha) {
     const captchaEl = await page.$('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
     if (!captchaEl) throw new Error('CAPTCHA element not found on Site 1')
 
-    // Wait for the CAPTCHA image to fully load before screenshotting.
-    // The element may exist in DOM before image bytes have arrived.
+    // Scroll into view so the browser renders it
+    await captchaEl.scrollIntoViewIfNeeded()
+
+    // Wait for the image bytes to arrive
     await page.waitForFunction(
-      el => el.complete && el.naturalWidth > 0,
+      el => el.complete && el.naturalWidth > 0 && el.naturalHeight > 0,
       captchaEl,
       { timeout: 10000 }
-    ).catch(() => {}) // proceed even if timeout — best effort
+    ).catch(() => {})
 
-    const captchaBuffer = await captchaEl.screenshot()
+    // Give the browser extra time to fully paint the image onto the canvas
+    await new Promise(r => setTimeout(r, 800))
+
+    // Use page-level clipped screenshot — captures actual painted pixels,
+    // not the element's pre-paint buffer which is what element.screenshot() uses
+    const box = await captchaEl.boundingBox()
+    const captchaBuffer = box
+      ? await page.screenshot({ clip: box })
+      : await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
 
     // Ask frontend for answer (may return null if user skipped)
