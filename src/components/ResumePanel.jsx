@@ -5,7 +5,8 @@ export default function ResumePanel({ onResume }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('http://localhost:3001/sessions')
+    const port = new URLSearchParams(window.location.search).get('port') || '3001'
+    fetch(`http://localhost:${port}/sessions`)
       .then(r => r.json())
       .then(data => { setSessions(data); setLoading(false) })
       .catch(() => setLoading(false))

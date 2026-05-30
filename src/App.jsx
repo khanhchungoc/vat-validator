@@ -1,5 +1,12 @@
 import { useState, useCallback } from 'react'
 import { useWebSocket } from './useWebSocket'
+
+// Read backend port injected by Electron (file:///dist/index.html?port=XXXXX)
+// Falls back to 3001 in dev (Vite)
+function getApiBase() {
+  const port = new URLSearchParams(window.location.search).get('port') || '3001'
+  return `http://localhost:${port}`
+}
 import DropZone from './components/DropZone'
 import ManualEntryForm from './components/ManualEntryForm'
 import InvoiceQueue from './components/InvoiceQueue'
@@ -153,7 +160,7 @@ export default function App() {
   const handleResume = useCallback(async (sessionDir) => {
     try {
       setDownloadUrls({ pdfUrl: null, xlsxUrl: null })
-      const res = await fetch('http://localhost:3001/sessions/resume', {
+      const res = await fetch(`${getApiBase()}/sessions/resume`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionDir })
@@ -175,7 +182,7 @@ export default function App() {
     let sessionDir = currentSessionDir
     if (!sessionDir) {
       try {
-        const res = await fetch('http://localhost:3001/sessions/new', { method: 'POST' })
+        const res = await fetch(`${getApiBase()}/sessions/new`, { method: 'POST' })
         const data = await res.json()
         if (res.ok) {
           sessionDir = data.sessionDir

@@ -48,31 +48,7 @@ wss.on('connection', (ws) => {
   ws.on('close', () => console.log('[WS] Client disconnected'))
 })
 
-const BASE_PORT = 3001
-const MAX_PORT = 3010
-
-function tryListen(port) {
-  server.listen(port, () => {
-    console.log(`[Backend] HTTP and WS listening on port ${port}`)
-    if (port !== BASE_PORT) {
-      console.warn(`[Backend] Note: using alternate port ${port} because ${BASE_PORT} was in use`)
-    }
-  })
-  server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      server.removeAllListeners('error')
-      const next = port + 1
-      if (next > MAX_PORT) {
-        throw new Error(
-          `All ports ${BASE_PORT}-${MAX_PORT} are in use. Close other VATOCR instances and try again.`
-        )
-      }
-      console.warn(`[Backend] Port ${port} in use, trying ${next}...`)
-      tryListen(next)
-    } else {
-      throw err
-    }
-  })
-}
-
-tryListen(BASE_PORT)
+const PORT = parseInt(process.env.BACKEND_PORT, 10) || 3001
+server.listen(PORT, () => {
+  console.log(`[Backend] HTTP and WS listening on port ${PORT}`)
+})

@@ -15,7 +15,8 @@ export default function DropZone({ onFilesUploaded, disabled }) {
     xmlFiles.forEach(f => formData.append('files', f))
 
     try {
-      const res = await fetch('http://localhost:3001/upload', { method: 'POST', body: formData })
+      const port = new URLSearchParams(window.location.search).get('port') || '3001'
+      const res = await fetch(`http://localhost:${port}/upload`, { method: 'POST', body: formData })
       const data = await res.json()
       if (!res.ok) {
         throw new Error(data?.error || `Server responded with status ${res.status}`)

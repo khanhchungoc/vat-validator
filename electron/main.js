@@ -1,5 +1,6 @@
 const { app, BrowserWindow } = require('electron')
 const path = require('path')
+const net = require('net')
 
 const isDev = !app.isPackaged
 
@@ -7,6 +8,18 @@ const isDev = !app.isPackaged
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
+}
+
+/** Ask the OS for a free TCP port by binding to port 0, then releasing it. */
+function findFreePort() {
+  return new Promise((resolve, reject) => {
+    const srv = net.createServer()
+    srv.listen(0, '127.0.0.1', () => {
+      const port = srv.address().port
+      srv.close((err) => (err ? reject(err) : resolve(port)))
+    })
+    srv.on('error', reject)
+  })
 }
 
 function getBackendPath() {
@@ -22,28 +35,27 @@ function showErrorWindow(err) {
     resizable: true,
     webPreferences: { nodeIntegration: false, contextIsolation: true }
   })
-  const detail = encodeURIComponent(
-    `Failed to start the background validator service:\n\n${err.stack || err.message}`
-  )
-  win.loadFile(path.join(__dirname, 'error.html'), { query: { message: decodeURIComponent(detail) } })
+  win.loadFile(path.join(__dirname, 'error.html'), {
+    query: { message: `Failed to start the background validator service:\n\n${err.stack || err.message}` }
+  })
   win.setMenu(null)
 }
 
-function startBackend() {
+function startBackend(port) {
   try {
+    process.env.BACKEND_PORT = String(port)
     if (!isDev) {
       process.env.NODE_ENV = 'production'
       process.env.OUTPUT_DIR = path.join(app.getPath('documents'), 'VATOCR', 'output')
     }
-    const backendPath = getBackendPath()
-    require(backendPath)
+    require(getBackendPath())
   } catch (err) {
     console.error('[Electron] Failed to start backend:', err)
     showErrorWindow(err)
   }
 }
 
-function createWindow() {
+function createWindow(port) {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -60,21 +72,35 @@ function createWindow() {
     win.loadURL('http://localhost:5173')
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
-    win.loadFile(path.join(__dirname, '../dist/index.html'))
+    // Pass the dynamically chosen port to the renderer via URL query param
+    win.loadFile(path.join(__dirname, '../dist/index.html'), {
+      query: { port: String(port) }
+    })
   }
 }
 
-app.whenReady().then(() => {
-  // Catch async errors (e.g. EADDRINUSE from server.listen) that bypass try-catch
+app.whenReady().then(async () => {
+  // Catch async errors that bypass try-catch and route them to the custom error window
   process.on('uncaughtException', (err) => {
     console.error('[Electron] Uncaught exception:', err)
     showErrorWindow(err)
   })
 
-  startBackend()
-  setTimeout(createWindow, isDev ? 1000 : 2000)
+  // Find a guaranteed-free port before starting the backend
+  let port
+  try {
+    port = isDev ? 3001 : await findFreePort()
+    console.log(`[Electron] Using backend port: ${port}`)
+  } catch (err) {
+    showErrorWindow(new Error(`Could not find a free port: ${err.message}`))
+    return
+  }
+
+  startBackend(port)
+  setTimeout(() => createWindow(port), isDev ? 1000 : 2000)
+
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(port)
   })
 
   // Focus existing window if a second instance tries to launch

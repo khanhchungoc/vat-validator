@@ -24,7 +24,10 @@ export function useWebSocket(onMessage) {
         onMessageRef.current({ type: 'ws-status', payload: 'Connecting...' })
       }
 
-      const socket = new WebSocket('ws://localhost:3001')
+      // In production Electron loads: file:///dist/index.html?port=XXXXX
+      // In dev mode, falls back to 3001
+      const backendPort = new URLSearchParams(window.location.search).get('port') || '3001'
+      const socket = new WebSocket(`ws://localhost:${backendPort}`)
       ws.current = socket
 
       socket.onopen = () => {
