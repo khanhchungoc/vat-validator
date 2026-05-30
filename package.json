@@ -10,7 +10,7 @@
     "dev:electron": "wait-on http://localhost:5173 && electron .",
     "build": "vite build",
     "pack": "npm run build && electron-builder",
-    "test": "jest"
+    "test": "jest --testPathIgnorePatterns=release"
   },
   "keywords": [],
   "author": "",

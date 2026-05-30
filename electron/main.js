@@ -1,6 +1,5 @@
 const { app, BrowserWindow, dialog } = require('electron')
 const path = require('path')
-const { spawn } = require('child_process')
 
 const isDev = !app.isPackaged
 
@@ -9,44 +8,23 @@ function getBackendPath() {
   return path.join(process.resourcesPath, 'backend/index.js')
 }
 
-function getNodePath() {
-  if (isDev) return 'node'
-  return path.join(path.dirname(process.execPath), 'node.exe')
-}
-
-let backendProcess = null
-
 function startBackend() {
-  const backendPath = getBackendPath()
-  backendProcess = spawn(getNodePath(), [backendPath], {
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      NODE_ENV: 'production',
-      OUTPUT_DIR: path.join(app.getPath('documents'), 'VATOCR', 'output')
+  try {
+    if (!isDev) {
+      process.env.NODE_ENV = 'production'
+      process.env.OUTPUT_DIR = path.join(app.getPath('documents'), 'VATOCR', 'output')
     }
-  })
-  backendProcess.on('error', (err) => {
-    console.error('[Electron] Backend error:', err)
+    const backendPath = getBackendPath()
+    require(backendPath)
+  } catch (err) {
+    console.error('[Electron] Failed to start backend:', err)
     if (!isDev) {
       dialog.showErrorBox(
         'Backend Validator Service Failure',
-        `Failed to start the background validator service:\n${err.message}\n\nPlease try reinstalling or running the application as Administrator.`
+        `Failed to start the background validator service:\n${err.message}\n\nPlease try reinstalling.`
       )
     }
-  })
-  backendProcess.on('exit', (code, signal) => {
-    console.warn(`[Electron] Backend process exited with code ${code} and signal ${signal}`)
-    backendProcess = null
-    if (code !== 0 && code !== null) {
-      if (!isDev) {
-        dialog.showErrorBox(
-          'Backend Validator Service Stopped',
-          'The background validator service stopped unexpectedly. Please restart the application.'
-        )
-      }
-    }
-  })
+  }
 }
 
 function createWindow() {
@@ -79,10 +57,5 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
-  if (backendProcess) backendProcess.kill()
   if (process.platform !== 'darwin') app.quit()
-})
-
-process.on('exit', () => {
-  if (backendProcess) backendProcess.kill()
 })
