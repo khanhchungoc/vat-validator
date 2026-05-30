@@ -23,11 +23,11 @@ async function runSite1(page, invoice, onCaptcha) {
 
   // Fill form fields
   // 1. Seller Tax ID
-  await page.fill('input[name="mstNban"], input[placeholder*="người bán"], input[id*="mstNban"]', invoice.taxId)
+  await page.fill('input#nbmst, input[name="mstNban"], input[placeholder*="người bán"], input[id*="mstNban"]', invoice.taxId)
 
   // 2. Ensure "Hóa đơn giá trị gia tăng" (VAT, first option) is selected in dropdown
   try {
-    const selectEl = await page.$('.ant-select')
+    const selectEl = await page.$('div#lhdon, #lhdon, .ant-select')
     if (selectEl) {
       await selectEl.click()
       await page.waitForTimeout(300)
@@ -45,9 +45,9 @@ async function runSite1(page, invoice, onCaptcha) {
   }
 
   // 3. Invoice Code, Number, and Amount
-  await page.fill('input[name="khhdon"], input[placeholder*="ký hiệu"], input[id*="khhdon"]', invoice.invoiceCode)
-  await page.fill('input[name="shdon"], input[placeholder*="số hóa đơn"], input[id*="shdon"]', String(invoice.invoiceNumber))
-  await page.fill('input[name="tgtttbso"], input[placeholder*="tổng tiền"], input[id*="tgtttbso"]', String(invoice.totalAmount))
+  await page.fill('input#khhdon, input[name="khhdon"], input[placeholder*="ký hiệu"], input[id*="khhdon"]', invoice.invoiceCode)
+  await page.fill('input#shdon, input[name="shdon"], input[placeholder*="số hóa đơn"], input[id*="shdon"]', String(invoice.invoiceNumber))
+  await page.fill('input#tgtttbso, input[name="tgtttbso"], input[placeholder*="tổng tiền"], input[id*="tgtttbso"]', String(invoice.totalAmount))
 
   let attempt = 0
   while (true) {
@@ -106,7 +106,7 @@ async function runSite1(page, invoice, onCaptcha) {
     }
 
     // Fill and submit CAPTCHA
-    await page.fill('input[name="captcha"], input[id*="captcha"]', answer)
+    await page.fill('input#cvalue, input[name="captcha"], input[id*="captcha"]', answer)
     await page.click('button[type="submit"], input[type="submit"], button:has-text("Tìm kiếm")')
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
 
