@@ -10,11 +10,12 @@ export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip })
     setIsSubmitting(false)
     setAnswer('')
     // Wait a brief tick to ensure input is re-enabled before trying to focus it
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus()
       }
     }, 50)
+    return () => clearTimeout(timer)
   }, [imageBase64, attempt])
 
   function handleSubmit(e) {
