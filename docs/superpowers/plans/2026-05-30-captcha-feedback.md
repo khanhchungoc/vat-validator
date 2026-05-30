@@ -1,0 +1,168 @@
+# CAPTCHA Verification Feedback Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Implement visual loading and error feedback in the CAPTCHA entry modal, retaining user inputs during verification and automatically resetting/notifying them on incorrect entries.
+
+**Architecture:** Introduce local `isSubmitting` state inside `CaptchaModal.jsx`, synchronize state transitions via a `useEffect` watching the CAPTCHA image and attempt count, and dynamically disable the input and submit elements during verification.
+
+**Tech Stack:** React 19, Vanilla CSS, Vite
+
+---
+
+### Task 1: Update CaptchaModal state and visual feedback
+
+**Files:**
+- Modify: `src/components/CaptchaModal.jsx`
+
+- [ ] **Step 1: Modify `src/components/CaptchaModal.jsx`**
+  Open the file and rewrite it to introduce `isSubmitting`, a `useEffect` for prop synchronization, and enhanced visual feedback:
+
+```jsx
+import { useState, useEffect } from 'react'
+
+export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip }) {
+  const [answer, setAnswer] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Reset loading state and clear input when a new CAPTCHA image or attempt arrives
+  useEffect(() => {
+    setIsSubmitting(false)
+    setAnswer('')
+  }, [imageBase64, attempt])
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (!answer.trim() || isSubmitting) return
+    setIsSubmitting(true)
+    onSubmit(answer.trim())
+  }
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal captcha-modal">
+        <h3>CAPTCHA Required</h3>
+        
+        {/* Error warning shown when a previous attempt has failed and we are not currently verifying */}
+        {attempt > 1 && !isSubmitting && (
+          <p className="error" style={{ color: 'var(--fail)', fontWeight: '500', marginBottom: 16 }}>
+            ❌ Incorrect CAPTCHA. Please try again (Attempt {attempt})
+          </p>
+        )}
+        
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <img
+            src={`data:image/png;base64,${imageBase64}`}
+            alt="CAPTCHA"
+            className="captcha-image"
+            style={{ 
+              opacity: isSubmitting ? 0.5 : 1, 
+              transition: 'opacity 0.2s',
+              display: 'block',
+              margin: '0 auto 20px'
+            }}
+          />
+          {isSubmitting && (
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingBottom: 20
+            }}>
+              {/* Spinner indicator */}
+              <div style={{
+                width: 24,
+                height: 24,
+                border: '3px solid var(--glass-border)',
+                borderTop: '3px solid var(--accent)',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            autoFocus
+            type="text"
+            className="mock-input"
+            placeholder={isSubmitting ? "Verifying..." : "Type the CAPTCHA text..."}
+            value={answer}
+            onChange={e => setAnswer(e.target.value)}
+            disabled={isSubmitting}
+            style={{
+              textAlign: 'center',
+              letterSpacing: '2px',
+              fontWeight: '600',
+              fontSize: '1.1rem',
+              background: isSubmitting ? 'rgba(255, 255, 255, 0.02)' : 'var(--glass)',
+              cursor: isSubmitting ? 'not-allowed' : 'text'
+            }}
+          />
+          
+          {isSubmitting && (
+            <div style={{ 
+              marginTop: 12, 
+              fontSize: '0.85rem', 
+              color: 'var(--text-muted)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: 8 
+            }}>
+              <span>⏳ Verifying CAPTCHA, please wait...</span>
+            </div>
+          )}
+
+          <div className="modal-actions" style={{ marginTop: 24 }}>
+            <button 
+              type="button" 
+              className="btn-skip" 
+              onClick={onSkip}
+              disabled={isSubmitting}
+              style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+            >
+              Skip Invoice
+            </button>
+            <button 
+              type="submit" 
+              className="btn-primary" 
+              disabled={!answer.trim() || isSubmitting}
+              style={{ 
+                cursor: (isSubmitting || !answer.trim()) ? 'not-allowed' : 'pointer',
+                minWidth: '120px'
+              }}
+            >
+              {isSubmitting ? 'Verifying...' : 'Submit ->'}
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      {/* Styles for spinner keyframes */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  )
+}
+```
+
+- [ ] **Step 2: Build & Verify**
+  Run Vite production build to make sure there are no syntax, import, or bundle compilation errors:
+  Run: `npm run build`
+  Expected: Success with no errors.
+
+- [ ] **Step 3: Commit**
+  Stage and commit the changes:
+  Run:
+  ```bash
+  git add src/components/CaptchaModal.jsx
+  git commit -m "feat: add visual submission feedback and input persistence to CAPTCHA modal"
+  ```
