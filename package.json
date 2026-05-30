@@ -39,6 +39,7 @@
     "appId": "com.vatocr.app",
     "productName": "VATOCR",
     "copyright": "Copyright © 2026",
+    "forceCodeSigning": false,
     "directories": {
       "output": "release",
       "buildResources": "assets"
@@ -64,8 +65,7 @@
         "nsis",
         "portable"
       ],
-      "icon": "assets/icon.ico",
-      "sign": false
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
