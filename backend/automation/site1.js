@@ -12,7 +12,7 @@ async function runSite1(page, invoice, onCaptcha) {
 
   // Close the annoying "CỤC THUẾ THÔNG BÁO" modal if it pops up and blocks the screen
   try {
-    const closeBtn = await page.waitForSelector('.ant-modal-close', { timeout: 3000 })
+    const closeBtn = await page.$('.ant-modal-close')
     if (closeBtn) {
       await closeBtn.click()
       await page.waitForTimeout(500) // Wait for modal fade out animation
