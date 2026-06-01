@@ -4,7 +4,7 @@ const SITE1_URL = 'https://hoadondientu.gdt.gov.vn/'
  * Run GDT Invoice Portal lookup for a single invoice.
  * @param {import('playwright').Page} page
  * @param {object} invoice - { invoiceCode, invoiceNumber, totalAmount }
- * @param {function} onCaptcha - async (base64Image) => string answer
+ * @param {function} onCaptcha - async (base64Image, attempt) => string|null
  * @returns {{ ok: boolean, screenshotBase64?: string, status: 'pass'|'invalid-invoice'|'skipped' }}
  */
 async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
@@ -141,13 +141,14 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
 
     let userSkipped = false
     let electronAnswer = null
+    let raceFinished = false
 
     let resolveAnswerSubmitted
     const answerSubmittedPromise = new Promise(resolve => {
       resolveAnswerSubmitted = resolve
     })
 
-    const skipPromise = onCaptcha(captchaBase64, attempt).then(ans => {
+    onCaptcha(captchaBase64, attempt).then(ans => {
       if (ans === null) {
         userSkipped = true
       } else {
@@ -170,6 +171,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       responsePromise,
       (async () => {
         await answerSubmittedPromise
+        if (raceFinished) return null
         if (userSkipped) return null
         if (electronAnswer) {
           onLog(`Typing CAPTCHA answer "${electronAnswer}" into GDT portal...`)
@@ -186,6 +188,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
         return null
       })()
     ])
+    raceFinished = true
 
     if (userSkipped || !response) {
       return { ok: false, status: 'skipped' }

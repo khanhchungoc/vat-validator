@@ -4,7 +4,7 @@ const SITE2_URL = 'https://tracuunnt.gdt.gov.vn/tcnnt/mstdn.jsp'
  * Run GDT Taxpayer Portal lookup for a single invoice.
  * @param {import('playwright').Page} page
  * @param {object} invoice - { taxId }
- * @param {function} onCaptcha - async (base64Image) => string answer
+ * @param {function} onCaptcha - async (base64Image, attempt) => string|null
  * @param {function} [onLog] - function to log real-time progress steps
  * @returns {{ ok: boolean, screenshotBase64?: string, status: 'pass'|'invalid-business'|'skipped' }}
  */
@@ -61,10 +61,25 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     } catch (e) {}
 
     let userSkipped = false
-    const skipPromise = onCaptcha(captchaBase64, attempt).then(ans => {
+    let electronAnswer = null
+    let raceFinished = false
+
+    let resolveAnswerSubmitted
+    const answerSubmittedPromise = new Promise(resolve => {
+      resolveAnswerSubmitted = resolve
+    })
+
+    onCaptcha(captchaBase64, attempt).then(ans => {
       if (ans === null) {
         userSkipped = true
+      } else {
+        electronAnswer = ans
       }
+      resolveAnswerSubmitted()
+    }).catch(err => {
+      console.error('[GDT Taxpayer Portal] CAPTCHA solving failed:', err.message)
+      userSkipped = true
+      resolveAnswerSubmitted()
     })
 
     // We wait for GDT's three distinct result states to appear in the DOM
@@ -74,18 +89,28 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
       .waitFor({ state: 'visible', timeout: 600000 }) // Wait up to 10 minutes
       .catch(() => null)
 
-    // Wait for either the user to click skip or a result to appear in the DOM
+    // Wait for either the user to solve it in the GDT browser or Electron UI
     await Promise.race([
       resultPromise,
-      new Promise(resolve => {
-        const interval = setInterval(() => {
-          if (userSkipped) {
-            clearInterval(interval)
-            resolve(null)
-          }
-        }, 100)
-      })
+      (async () => {
+        await answerSubmittedPromise
+        if (raceFinished) return
+        if (userSkipped) return
+        if (electronAnswer) {
+          onLog(`Typing CAPTCHA answer "${electronAnswer}" into GDT portal...`)
+          // Clear and focus GDT's taxpayer input field
+          await page.fill('input#captcha', '')
+          await page.focus('input#captcha')
+          // Simulate human typing
+          await page.keyboard.type(electronAnswer, { delay: 80 })
+          // Press Enter to submit
+          await page.keyboard.press('Enter')
+          // Wait for DOM updates to reflect
+          await resultPromise
+        }
+      })()
     ])
+    raceFinished = true
 
     if (userSkipped) {
       return { ok: false, status: 'skipped' }
