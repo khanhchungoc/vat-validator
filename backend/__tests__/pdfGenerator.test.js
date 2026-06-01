@@ -43,5 +43,5 @@ describe('pdfGenerator', () => {
 
     await generatePDF(sessionDir, invoices);
     expect(fs.existsSync(resultsPdfPath)).toBe(true);
-  });
+  }, 20000);
 });

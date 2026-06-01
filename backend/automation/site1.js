@@ -105,32 +105,70 @@ async function runSite1(page, invoice, onCaptcha) {
       return { ok: false, status: 'skipped' }
     }
 
+    // Set up network response listener for the guest-invoices API call
+    const responsePromise = page.waitForResponse(response => 
+      response.url().includes('/api/sco-query/guest-invoices'),
+      { timeout: 30000 }
+    ).catch(() => null)
+
     // Fill and submit CAPTCHA
     await page.fill('input#cvalue, input[name="captcha"], input[id*="captcha"]', answer)
     await page.click('button[type="submit"], input[type="submit"], button:has-text("Tìm kiếm")')
-    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
 
-    // Check for CAPTCHA failure (if the form is still visible, the CAPTCHA was wrong)
-    await page.waitForTimeout(1000)
-    const formIsStillVisible = await page.$('input#cvalue')
-    if (formIsStillVisible && await formIsStillVisible.isVisible()) {
-      // Loop: get new CAPTCHA
+    const response = await responsePromise
+
+    if (!response) {
+      // Fallback: if timeout or network issue occurs, check if form is still visible
+      const formIsStillVisible = await page.$('input#cvalue')
+      if (formIsStillVisible && await formIsStillVisible.isVisible()) {
+        continue
+      }
+      break
+    }
+
+    // 1. Check for incorrect CAPTCHA (HTTP 401 Unauthorized)
+    if (response.status() === 401) {
+      console.log(`[Site 1] Incorrect CAPTCHA submitted (attempt ${attempt}). Retrying...`)
       continue
     }
 
+    // 2. Check for successful response (HTTP 200 OK)
+    if (response.status() === 200) {
+      const text = await response.text().catch(() => '')
+      let body = null
+      try {
+        body = text ? JSON.parse(text) : null
+      } catch (e) {
+        console.error('[Site 1] Failed to parse API response JSON:', e.message)
+      }
+
+      // If the body is null or represents an empty object/array, the invoice does not exist
+      if (!body || Object.keys(body).length === 0) {
+        console.log(`[Site 1] Invoice not found via API.`)
+        // Wait for UI to render the "Không tìm thấy" error message
+        await page.waitForSelector('text=Không tìm thấy, text=không hợp lệ, .result-error', { timeout: 5000 }).catch(() => {})
+        
+        const screenshotBuffer = await page.screenshot({ fullPage: false })
+        const screenshotBase64 = screenshotBuffer.toString('base64')
+        return { ok: true, screenshotBase64, status: 'invalid-invoice' }
+      } else {
+        console.log(`[Site 1] Invoice verified successfully via API.`)
+        // Wait for UI to render the "Tồn tại hóa đơn" success message
+        await page.waitForSelector('text=Tồn tại hóa đơn có thông tin trùng khớp, .result-success', { timeout: 5000 }).catch(() => {})
+        
+        const screenshotBuffer = await page.screenshot({ fullPage: false })
+        const screenshotBase64 = screenshotBuffer.toString('base64')
+        return { ok: true, screenshotBase64, status: 'pass' }
+      }
+    }
+
+    // If other status code, fallback to DOM check
+    const formIsStillVisible = await page.$('input#cvalue')
+    if (formIsStillVisible && await formIsStillVisible.isVisible()) {
+      continue
+    }
     break
   }
-
-  // Take result screenshot
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
-  const screenshotBuffer = await page.screenshot({ fullPage: false })
-  const screenshotBase64 = screenshotBuffer.toString('base64')
-
-  // Determine pass/fail from page content
-  const isInvalid = await page.$('text=Không tìm thấy, text=không hợp lệ, .result-error')
-  const status = isInvalid ? 'invalid-invoice' : 'pass'
-
-  return { ok: true, screenshotBase64, status }
 }
 
 module.exports = { runSite1 }
