@@ -100,8 +100,14 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
           await page.focus('input#captcha')
           // Simulate human typing
           await page.keyboard.type(electronAnswer, { delay: 80 })
-          // Press Enter to submit
-          await page.keyboard.press('Enter')
+          // Click GDT's submit button (can be input.subBtn, .subBtn, input[type="submit"], text=Tra cứu, etc.)
+          const submitBtn = await page.$('input.subBtn, .subBtn, input[type="submit"], button[type="submit"], text=Tra cứu, text=Tìm kiếm')
+          if (submitBtn) {
+            await submitBtn.click()
+          } else {
+            // Fallback: Press Enter
+            await page.keyboard.press('Enter')
+          }
           // Wait for navigation to complete
           await navigationPromise
         }
