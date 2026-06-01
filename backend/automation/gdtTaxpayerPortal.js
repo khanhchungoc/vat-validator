@@ -1,13 +1,14 @@
 const SITE2_URL = 'https://tracuunnt.gdt.gov.vn/tcnnt/mstdn.jsp'
+const JITTER_FACTOR = 0.07
 
 /**
- * Generate a randomized delay with ±10% jitter (or at least ±50ms) to bypass bot heuristics.
+ * Generate a randomized delay with ±7% dynamic timing jitter to bypass bot heuristics.
  */
 function getRandomDelay(baseMs) {
-  const jitter = Math.round(baseMs * 0.07); // 7% dynamic jitter
-  const min = baseMs - jitter;
-  const max = baseMs + jitter;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  const jitter = Math.round(baseMs * JITTER_FACTOR) // 7% dynamic jitter
+  const min = baseMs - jitter
+  const max = baseMs + jitter
+  return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
 /**
