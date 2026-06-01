@@ -25,16 +25,17 @@ describe('Automation Engine Session Saving', () => {
     jest.clearAllMocks()
     mockPage = {
       goto: jest.fn(),
-      close: jest.fn()
+      close: jest.fn(),
+      setViewportSize: jest.fn().mockResolvedValue(undefined)
     }
     mockBrowser = {
       newPage: jest.fn().mockResolvedValue(mockPage),
       close: jest.fn()
     }
     chromium.launch.mockResolvedValue(mockBrowser)
-    
+
     getInvoices.mockReturnValue([
-      { id: 'inv1', status: 'pending' }
+      { id: 'inv1', taxId: 'TAX001', status: 'pending' }
     ])
 
     runGdtInvoicePortal.mockResolvedValue({ status: 'pass', screenshotBase64: 'abc' })
@@ -46,15 +47,34 @@ describe('Automation Engine Session Saving', () => {
 
     // Initial processing status
     expect(updateInvoiceStatus).toHaveBeenCalledWith('inv1', 'processing')
-    
-    // Final pass status
+
+    // Phase 1 intermediate status
+    expect(updateInvoiceStatus).toHaveBeenCalledWith('inv1', 'site1-done', expect.any(Object))
+
+    // Final pass status (from Phase 2)
     expect(updateInvoiceStatus).toHaveBeenCalledWith('inv1', 'pass', expect.any(Object))
 
-    // saveSession should be called 3 times for one invoice:
-    // 1. After status set to 'processing'
-    // 2. After status set to 'pass'
-    // 3. In the finally block
-    expect(saveSession).toHaveBeenCalledTimes(3)
+    // saveSession is called for each phase transition plus the finally block.
+    // For one invoice passing both phases: processing → site1-done → final → finally = 4 times
+    expect(saveSession).toHaveBeenCalledTimes(4)
     expect(saveSession).toHaveBeenCalledWith('test-session-dir', expect.any(Array))
+  })
+
+  test('should run Site 2 only once per unique Tax ID across multiple invoices', async () => {
+    // Two invoices with the SAME tax ID
+    getInvoices.mockReturnValue([
+      { id: 'inv1', taxId: 'TAX001', status: 'pending' },
+      { id: 'inv2', taxId: 'TAX001', status: 'pending' }
+    ])
+    runGdtInvoicePortal.mockResolvedValue({ status: 'pass', screenshotBase64: 'abc' })
+    runGdtTaxpayerPortal.mockResolvedValue({ status: 'pass', screenshotBase64: 'def' })
+
+    await engine.startProcessing('test-session-dir', 'auto')
+
+    // Site 1 called twice (once per invoice)
+    expect(runGdtInvoicePortal).toHaveBeenCalledTimes(2)
+
+    // Site 2 called only ONCE despite two invoices sharing the same Tax ID
+    expect(runGdtTaxpayerPortal).toHaveBeenCalledTimes(1)
   })
 })
