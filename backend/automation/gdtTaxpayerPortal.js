@@ -53,29 +53,43 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     const captchaBuffer = await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
 
-    onLog('Prompting user for CAPTCHA input...')
-    const answer = await onCaptcha(captchaBase64, attempt)
-    if (answer === null) {
-      return { ok: false, status: 'skipped' }
-    }
+    onLog('Please solve the CAPTCHA directly in GDT\'s opened browser window...')
 
-    onLog(`Submitting CAPTCHA answer: "${answer}"...`)
+    // Focus GDT's input field so they can immediately type without clicking it!
+    try {
+      await page.focus('input#captcha')
+    } catch (e) {}
 
-    // Fill and submit CAPTCHA with event-driven typing
-    const inputSelector = 'input#captcha, input[name="captcha"]'
-    await page.focus(inputSelector)
-    await page.keyboard.press('Control+A')
-    await page.keyboard.press('Backspace')
-    await page.type(inputSelector, answer.trim(), { delay: 100 })
+    let userSkipped = false
+    const skipPromise = onCaptcha(captchaBase64, attempt).then(ans => {
+      if (ans === null) {
+        userSkipped = true
+      }
+    })
 
-    await page.click('input.subBtn, .subBtn, button[type="submit"], input[type="submit"], a:has-text("Tìm kiếm")')
-
-    // Wait for any of GDT's three distinct result states to appear in the DOM
-    await page.locator('text=Vui lòng nhập đúng mã xác nhận')
+    // We wait for GDT's three distinct result states to appear in the DOM
+    const resultPromise = page.locator('text=Vui lòng nhập đúng mã xác nhận')
       .or(page.locator('text=BẢNG THÔNG TIN TRA CỨU'))
       .or(page.locator('text=Không tìm thấy người nộp thuế'))
-      .waitFor({ state: 'visible', timeout: 15000 })
-      .catch(() => {})
+      .waitFor({ state: 'visible', timeout: 600000 }) // Wait up to 10 minutes
+      .catch(() => null)
+
+    // Wait for either the user to click skip or a result to appear in the DOM
+    await Promise.race([
+      resultPromise,
+      new Promise(resolve => {
+        const interval = setInterval(() => {
+          if (userSkipped) {
+            clearInterval(interval)
+            resolve(null)
+          }
+        }, 100)
+      })
+    ])
+
+    if (userSkipped) {
+      return { ok: false, status: 'skipped' }
+    }
 
     // Check which element won the race
     const hasWrongCaptcha = await page.$('text=Vui lòng nhập đúng mã xác nhận')

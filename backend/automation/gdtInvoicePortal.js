@@ -132,45 +132,41 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       : await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
 
-    onLog('Prompting user for CAPTCHA input...')
-    // Ask frontend for answer (may return null if user skipped)
-    const answer = await onCaptcha(captchaBase64, attempt)
-    if (answer === null) {
-      return { ok: false, status: 'skipped' }
-    }
+    onLog('Please solve the CAPTCHA directly in GDT\'s opened browser window...')
+
+    // Focus GDT's input field so they can immediately type without clicking it!
+    try {
+      await page.focus('input#cvalue')
+    } catch (e) {}
+
+    let userSkipped = false
+    const skipPromise = onCaptcha(captchaBase64, attempt).then(ans => {
+      if (ans === null) {
+        userSkipped = true
+      }
+    })
 
     // Set up network response listener for the guest-invoices API call
     const responsePromise = page.waitForResponse(response => 
       response.url().includes('/api/sco-query/guest-invoices'),
-      { timeout: 30000 }
+      { timeout: 600000 } // Wait up to 10 minutes for user to solve captcha
     ).catch(() => null)
 
-    onLog(`Submitting CAPTCHA answer: "${answer}"...`)
-    
-    // Save current CAPTCHA src before submitting so we can detect when it updates on 401
-    const oldCaptchaSrc = await page.evaluate(() => {
-      const img = document.querySelector('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
-      return img ? img.getAttribute('src') : null
-    })
+    // Wait for either the user to click skip or the network response to arrive
+    const response = await Promise.race([
+      responsePromise,
+      new Promise(resolve => {
+        const interval = setInterval(() => {
+          if (userSkipped) {
+            clearInterval(interval)
+            resolve(null)
+          }
+        }, 100)
+      })
+    ])
 
-    // Fill and submit CAPTCHA with event-driven typing
-    const inputSelector = 'input#cvalue, input[name="captcha"], input[id*="captcha"]'
-    await page.focus(inputSelector)
-    await page.keyboard.press('Control+A')
-    await page.keyboard.press('Backspace')
-    await page.type(inputSelector, answer.trim(), { delay: 100 })
-
-    await page.click('button[type="submit"], input[type="submit"], button:has-text("Tìm kiếm")')
-
-    const response = await responsePromise
-
-    if (!response) {
-      // Fallback: if timeout or network issue occurs, check if form is still visible
-      const formIsStillVisible = await page.$('input#cvalue')
-      if (formIsStillVisible && await formIsStillVisible.isVisible()) {
-        continue
-      }
-      break
+    if (userSkipped || !response) {
+      return { ok: false, status: 'skipped' }
     }
 
     // 1. Check for incorrect CAPTCHA (HTTP 401 Unauthorized)
@@ -179,6 +175,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       console.log(`[GDT Invoice Portal] Incorrect CAPTCHA submitted (attempt ${attempt}). Retrying...`)
 
       // Wait for captcha src to actually change to prevent screenshotting the old CAPTCHA
+      const oldCaptchaSrc = captchaBase64
       await page.waitForFunction(
         (prevSrc) => {
           const img = document.querySelector('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
@@ -230,11 +227,6 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       }
     }
 
-    // If other status code, fallback to DOM check
-    const formIsStillVisible = await page.$('input#cvalue')
-    if (formIsStillVisible && await formIsStillVisible.isVisible()) {
-      continue
-    }
     break
   }
 

@@ -1,135 +1,56 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 
-export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip }) {
-  const [answer, setAnswer] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const inputRef = useRef(null)
-
-  // Reset loading state and clear input when a new CAPTCHA image or attempt arrives
-  useEffect(() => {
-    setIsSubmitting(false)
-    setAnswer('')
-    // Wait a brief tick to ensure input is re-enabled before trying to focus it
-    const timer = setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus()
-      }
-    }, 50)
-    return () => clearTimeout(timer)
-  }, [imageBase64, attempt])
-
-  function handleSubmit(e) {
-    e.preventDefault()
-    if (!answer.trim() || isSubmitting) return
-    setIsSubmitting(true)
-    onSubmit(answer.trim())
-  }
-
+export default function CaptchaModal({ imageBase64, attempt, onSkip }) {
   return (
     <div className="modal-overlay">
-      <div className="modal captcha-modal">
-        <h3>CAPTCHA Required</h3>
+      <div className="modal captcha-modal" style={{ textAlign: 'center', padding: '24px 30px' }}>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          🔑 CAPTCHA Solve Required
+        </h3>
         
-        {/* Error warning shown when a previous attempt has failed and we are not currently verifying */}
-        {attempt > 1 && !isSubmitting && (
-          <p className="error" style={{ color: 'var(--fail)', fontWeight: '500', marginBottom: 16 }}>
-            ❌ Incorrect CAPTCHA. Please try again (Attempt {attempt})
+        <p style={{ color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: '1.5', marginBottom: 20 }}>
+          Please click on the <strong>opened browser window</strong>, type the CAPTCHA text directly into GDT's input field, and submit.
+        </p>
+
+        {attempt > 1 && (
+          <p className="error" style={{ color: 'var(--fail)', fontWeight: '600', marginBottom: 16, fontSize: '0.85rem' }}>
+            ❌ Incorrect CAPTCHA entered. Please try GDT's refreshed code (Attempt {attempt})
           </p>
         )}
         
-        <div style={{ position: 'relative', display: 'inline-block' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--glass-border)', display: 'inline-block', marginBottom: 24 }}>
           <img
             src={`data:image/png;base64,${imageBase64}`}
-            alt="CAPTCHA"
+            alt="CAPTCHA Hint"
             className="captcha-image"
             style={{ 
-              opacity: isSubmitting ? 0.5 : 1, 
-              transition: 'opacity 0.2s',
               display: 'block',
-              margin: '0 auto 20px'
+              margin: '0 auto',
+              borderRadius: '6px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
             }}
           />
-          {isSubmitting && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingBottom: 20
-            }}>
-              {/* Spinner indicator */}
-              <div style={{
-                width: 24,
-                height: 24,
-                border: '3px solid var(--glass-border)',
-                borderTop: '3px solid var(--accent)',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }} />
-            </div>
-          )}
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: 10 }}>
+            Image copy for reference
+          </span>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            ref={inputRef}
-            autoFocus
-            type="text"
-            className="mock-input"
-            placeholder={isSubmitting ? "Verifying..." : "Type the CAPTCHA text..."}
-            value={answer}
-            onChange={e => setAnswer(e.target.value)}
-            disabled={isSubmitting}
-            style={{
-              textAlign: 'center',
-              letterSpacing: '2px',
-              fontWeight: '600',
-              fontSize: '1.1rem',
-              background: isSubmitting ? 'rgba(255, 255, 255, 0.02)' : 'var(--glass)',
-              cursor: isSubmitting ? 'not-allowed' : 'text'
-            }}
-          />
-          
-          {isSubmitting && (
-            <div style={{ 
-              marginTop: 12, 
-              fontSize: '0.85rem', 
-              color: 'var(--text-muted)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: 8 
-            }}>
-              <span>⏳ Verifying CAPTCHA, please wait...</span>
-            </div>
-          )}
+        <div style={{ fontSize: '0.85rem', color: '#60a5fa', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
+          <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#60a5fa', animation: 'console-indicator-pulse 1.5s infinite' }} />
+          <span>Waiting for your submission in GDT browser window...</span>
+        </div>
 
-          <div className="modal-actions" style={{ marginTop: 24 }}>
-            <button 
-              type="button" 
-              className="btn-skip" 
-              onClick={onSkip}
-              disabled={isSubmitting}
-              style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
-            >
-              Skip Invoice
-            </button>
-            <button 
-              type="submit" 
-              className="btn-primary" 
-              disabled={!answer.trim() || isSubmitting}
-              style={{ 
-                cursor: (isSubmitting || !answer.trim()) ? 'not-allowed' : 'pointer',
-                minWidth: '120px'
-              }}
-            >
-              {isSubmitting ? 'Verifying...' : 'Submit ->'}
-            </button>
-          </div>
-        </form>
+        <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
+          <button 
+            type="button" 
+            className="btn-skip" 
+            onClick={onSkip}
+            style={{ width: '100%', maxWidth: '200px' }}
+          >
+            Skip Invoice
+          </button>
+        </div>
       </div>
     </div>
   )
 }
-
