@@ -101,6 +101,12 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     if (hasWrongCaptcha && await hasWrongCaptcha.isVisible()) {
       onLog('GDT returned "Vui lòng nhập đúng mã xác nhận!" (Incorrect CAPTCHA). Refreshing and retrying...')
 
+      // Force a manual CAPTCHA image click to trigger refresh
+      const captchaImg = await page.$('img[src*="captcha"]')
+      if (captchaImg) {
+        await captchaImg.click()
+      }
+
       // Wait for captcha src to actually change to prevent screenshotting the old CAPTCHA
       await page.waitForFunction(
         (prevSrc) => {
@@ -108,7 +114,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
           return img && img.getAttribute('src') !== prevSrc
         },
         oldCaptchaSrc,
-        { timeout: 10000 }
+        { timeout: 5000 }
       ).catch(() => {})
 
       continue
@@ -133,7 +139,22 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     // Fallback: If other status or timeout occurs, check if form is still visible
     const formIsStillVisible = await page.$('input#captcha')
     if (formIsStillVisible && await formIsStillVisible.isVisible()) {
-      onLog('CAPTCHA incorrect or timeout occurred. Retrying...')
+      onLog('CAPTCHA incorrect or timeout occurred. Refreshing and retrying...')
+
+      const captchaImg = await page.$('img[src*="captcha"]')
+      if (captchaImg) {
+        await captchaImg.click()
+      }
+
+      await page.waitForFunction(
+        (prevSrc) => {
+          const img = document.querySelector('img[src*="captcha"]')
+          return img && img.getAttribute('src') !== prevSrc
+        },
+        oldCaptchaSrc,
+        { timeout: 5000 }
+      ).catch(() => {})
+
       continue
     }
 
