@@ -1,4 +1,4 @@
-const { stripBranchSuffix } = require('../automation/site2')
+const { stripBranchSuffix } = require('../automation/gdtTaxpayerPortal')
 
 test('strips branch suffix', () => {
   expect(stripBranchSuffix('0102721191-068')).toBe('0102721191')

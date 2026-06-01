@@ -47,8 +47,8 @@ function buildInvoicePageHTML(invoice, screenshotsDir) {
         <tr><td>Total Amount</td><td>${formatAmount(invoice.totalAmount)}</td></tr>        
       </table>
       <div class="screenshots">
-        ${imgTag(site1B64, 'Website 1 — hoadondientu.gdt.gov.vn')}
-        ${imgTag(site2B64, 'Website 2 — tracuunnt.gdt.gov.vn')}
+        ${imgTag(site1B64, 'GDT Invoice Portal — hoadondientu.gdt.gov.vn')}
+        ${imgTag(site2B64, 'GDT Taxpayer Portal — tracuunnt.gdt.gov.vn')}
       </div>
     </div>
   `

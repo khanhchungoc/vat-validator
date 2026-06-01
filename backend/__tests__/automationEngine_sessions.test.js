@@ -1,14 +1,14 @@
 const engine = require('../automation/automationEngine')
 const { saveSession } = require('../sessionManager')
 const { getInvoices, updateInvoiceStatus } = require('../invoiceStore')
-const { runSite1 } = require('../automation/site1')
-const { runSite2 } = require('../automation/site2')
+const { runGdtInvoicePortal } = require('../automation/gdtInvoicePortal')
+const { runGdtTaxpayerPortal } = require('../automation/gdtTaxpayerPortal')
 const { chromium } = require('playwright')
 
 jest.mock('../sessionManager')
 jest.mock('../invoiceStore')
-jest.mock('../automation/site1')
-jest.mock('../automation/site2')
+jest.mock('../automation/gdtInvoicePortal')
+jest.mock('../automation/gdtTaxpayerPortal')
 jest.mock('playwright')
 jest.mock('../output/pdfGenerator', () => ({
   generatePDF: jest.fn().mockResolvedValue('mock-pdf-path')
@@ -37,8 +37,8 @@ describe('Automation Engine Session Saving', () => {
       { id: 'inv1', status: 'pending' }
     ])
 
-    runSite1.mockResolvedValue({ status: 'pass', screenshotBase64: 'abc' })
-    runSite2.mockResolvedValue({ status: 'pass', screenshotBase64: 'def' })
+    runGdtInvoicePortal.mockResolvedValue({ status: 'pass', screenshotBase64: 'abc' })
+    runGdtTaxpayerPortal.mockResolvedValue({ status: 'pass', screenshotBase64: 'def' })
   })
 
   test('should call saveSession when starting processing and after completion', async () => {

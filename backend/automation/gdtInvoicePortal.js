@@ -1,13 +1,13 @@
 const SITE1_URL = 'https://hoadondientu.gdt.gov.vn/'
 
 /**
- * Run Website 1 lookup for a single invoice.
+ * Run GDT Invoice Portal lookup for a single invoice.
  * @param {import('playwright').Page} page
  * @param {object} invoice - { invoiceCode, invoiceNumber, totalAmount }
  * @param {function} onCaptcha - async (base64Image) => string answer
  * @returns {{ ok: boolean, screenshotBase64?: string, status: 'pass'|'invalid-invoice'|'skipped' }}
  */
-async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
+async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
   onLog('Navigating to GDT Portal (https://hoadondientu.gdt.gov.vn/)...')
   await page.goto(SITE1_URL, { waitUntil: 'networkidle', timeout: 30000 })
 
@@ -67,7 +67,7 @@ async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
     onLog(`Capturing CAPTCHA image (attempt ${attempt})...`)
     // Capture CAPTCHA image
     const captchaEl = await page.$('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
-    if (!captchaEl) throw new Error('CAPTCHA element not found on Site 1')
+    if (!captchaEl) throw new Error('CAPTCHA element not found on GDT Invoice Portal')
 
     // Scroll the first captcha piece into view
     await captchaEl.scrollIntoViewIfNeeded()
@@ -135,7 +135,7 @@ async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
     // 1. Check for incorrect CAPTCHA (HTTP 401 Unauthorized)
     if (response.status() === 401) {
       onLog('GDT returned HTTP 401 (Incorrect CAPTCHA). Refreshing and retrying...')
-      console.log(`[Site 1] Incorrect CAPTCHA submitted (attempt ${attempt}). Retrying...`)
+      console.log(`[GDT Invoice Portal] Incorrect CAPTCHA submitted (attempt ${attempt}). Retrying...`)
       continue
     }
 
@@ -146,13 +146,13 @@ async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
       try {
         body = text ? JSON.parse(text) : null
       } catch (e) {
-        console.error('[Site 1] Failed to parse API response JSON:', e.message)
+        console.error('[GDT Invoice Portal] Failed to parse API response JSON:', e.message)
       }
 
       // If the body is null or represents an empty object/array, the invoice does not exist
       if (!body || Object.keys(body).length === 0) {
         onLog('GDT returned HTTP 200 (Invoice not found). Capturing error screenshot...')
-        console.log(`[Site 1] Invoice not found via API.`)
+        console.log(`[GDT Invoice Portal] Invoice not found via API.`)
         // Wait for UI to render the "Không tìm thấy" error message
         await page.locator('text=Không tìm thấy')
           .or(page.locator('text=không hợp lệ'))
@@ -165,7 +165,7 @@ async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
         return { ok: true, screenshotBase64, status: 'invalid-invoice' }
       } else {
         onLog('GDT returned HTTP 200 (Invoice verified!). Capturing success screenshot...')
-        console.log(`[Site 1] Invoice verified successfully via API.`)
+        console.log(`[GDT Invoice Portal] Invoice verified successfully via API.`)
         // Wait for UI to render the "Tồn tại hóa đơn" success message
         await page.locator('text=Tồn tại hóa đơn có thông tin trùng khớp')
           .or(page.locator('.result-success'))
@@ -205,4 +205,4 @@ async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
   return { ok: true, screenshotBase64, status }
 }
 
-module.exports = { runSite1 }
+module.exports = { runGdtInvoicePortal }

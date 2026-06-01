@@ -1,14 +1,14 @@
 const SITE2_URL = 'https://tracuunnt.gdt.gov.vn/tcnnt/mstdn.jsp'
 
 /**
- * Run Website 2 lookup for a single invoice.
+ * Run GDT Taxpayer Portal lookup for a single invoice.
  * @param {import('playwright').Page} page
  * @param {object} invoice - { taxId }
  * @param {function} onCaptcha - async (base64Image) => string answer
  * @param {function} [onLog] - function to log real-time progress steps
  * @returns {{ ok: boolean, screenshotBase64?: string, status: 'pass'|'invalid-business'|'skipped' }}
  */
-async function runSite2(page, invoice, onCaptcha, onLog = () => {}) {
+async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) {
   onLog(`Entering Seller Tax ID (${invoice.taxId}) into the first field...`)
   await page.goto(SITE2_URL, { waitUntil: 'networkidle', timeout: 30000 })
 
@@ -20,7 +20,7 @@ async function runSite2(page, invoice, onCaptcha, onLog = () => {}) {
     attempt++
     onLog(`Capturing CAPTCHA image (attempt ${attempt})...`)
     const captchaEl = await page.$('img[src*="captcha"]')
-    if (!captchaEl) throw new Error('CAPTCHA element not found on Site 2')
+    if (!captchaEl) throw new Error('CAPTCHA element not found on GDT Taxpayer Portal')
 
     await captchaEl.scrollIntoViewIfNeeded()
 
@@ -109,4 +109,4 @@ function stripBranchSuffix(taxId) {
   return taxId.split('-')[0]
 }
 
-module.exports = { runSite2, stripBranchSuffix }
+module.exports = { runGdtTaxpayerPortal, stripBranchSuffix }

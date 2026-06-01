@@ -1,6 +1,6 @@
 const { chromium } = require('playwright')
-const { runSite1 } = require('./site1')
-const { runSite2 } = require('./site2')
+const { runGdtInvoicePortal } = require('./gdtInvoicePortal')
+const { runGdtTaxpayerPortal } = require('./gdtTaxpayerPortal')
 const { getInvoices, updateInvoiceStatus } = require('../invoiceStore')
 const { saveSession } = require('../sessionManager')
 const { generatePDF } = require('../output/pdfGenerator')
@@ -99,28 +99,28 @@ async function startProcessing(sessionDir, mode = 'auto') {
       while (processAttempt < maxProcessAttempts) {
         processAttempt++
         try {
-          // Site 1
-          const site1Result = await runSite1(
+          // GDT Invoice Portal
+          const site1Result = await runGdtInvoicePortal(
             page, 
             invoice, 
             (img, att) => waitForCaptchaAnswer(invoice.id, img, att),
-            (msg) => logStep(invoice.id, `[Site 1] ${msg}`)
+            (msg) => logStep(invoice.id, `[GDT Invoice Portal] ${msg}`)
           )
           if (site1Result.status === 'skipped') {
             finalStatus = 'skipped'
           } else {
-            // Site 1 passed! Close the CAPTCHA modal immediately
+            // GDT Invoice Portal passed! Close the CAPTCHA modal immediately
             broadcast({ type: 'captcha-success', payload: { id: invoice.id } })
             site1Screenshot = saveScreenshot(sessionDir, invoice.id, 1, site1Result.screenshotBase64)
             if (site1Result.status === 'invalid-invoice') {
               finalStatus = 'invalid-invoice'
             } else {
-              // Site 2 (only if Site 1 passed)
-              const site2Result = await runSite2(
+              // GDT Taxpayer Portal (only if Invoice Portal passed)
+              const site2Result = await runGdtTaxpayerPortal(
                 page, 
                 invoice, 
                 (img, att) => waitForCaptchaAnswer(invoice.id, img, att),
-                (msg) => logStep(invoice.id, `[Site 2] ${msg}`)
+                (msg) => logStep(invoice.id, `[GDT Taxpayer Portal] ${msg}`)
               )
               if (site2Result.status === 'skipped') {
                 finalStatus = 'skipped'
