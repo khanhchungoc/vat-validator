@@ -1,6 +1,16 @@
 const SITE2_URL = 'https://tracuunnt.gdt.gov.vn/tcnnt/mstdn.jsp'
 
 /**
+ * Generate a randomized delay with ±10% jitter (or at least ±50ms) to bypass bot heuristics.
+ */
+function getRandomDelay(baseMs) {
+  const jitter = Math.max(30, Math.floor(baseMs * 0.1)); // 10% jitter, min 30ms
+  const min = baseMs - jitter;
+  const max = baseMs + jitter;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/**
  * Run GDT Taxpayer Portal lookup for a single invoice.
  * @param {import('playwright').Page} page
  * @param {object} invoice - { taxId }
@@ -25,7 +35,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     const captchaImg = await page.$('img[src*="captcha"]')
     if (captchaImg) {
       await captchaImg.click()
-      await page.waitForTimeout(1000)
+      await page.waitForTimeout(getRandomDelay(1000))
     }
   }
 
@@ -48,7 +58,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
       { timeout: 10000 }
     ).catch(() => {})
 
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(getRandomDelay(500))
 
     const captchaBuffer = await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
@@ -104,7 +114,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
             await page.keyboard.type(char, { delay })
           }
           // Human muscle transition delay (500ms)
-          await page.waitForTimeout(500)
+          await page.waitForTimeout(getRandomDelay(500))
           
           // Click GDT's submit button natively inside GDT's form context.
           // This avoids matching global page header links (like the "Tra cứu" tab menu item) and triggers the exact onclick validators.
@@ -130,14 +140,14 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
               .first()
 
             await submitBtn.hover().catch(() => {})
-            await page.waitForTimeout(200) // Small click action delay
+            await page.waitForTimeout(getRandomDelay(200)) // Small click action delay
             await submitBtn.click()
           } else {
             // Fallback: Use standard Playwright click
             const fallbackBtn = page.locator('input.subBtn, .subBtn, input[type="submit"]').first()
             if (await fallbackBtn.isVisible().catch(() => false)) {
               await fallbackBtn.hover().catch(() => {})
-              await page.waitForTimeout(200)
+              await page.waitForTimeout(getRandomDelay(200))
               await fallbackBtn.click()
             } else {
               await page.keyboard.press('Enter')
@@ -160,7 +170,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
       onLog('GDT returned "Vui lòng nhập đúng mã xác nhận!" (Incorrect CAPTCHA). Refreshing and retrying...')
       // GDT reloads the page on incorrect CAPTCHA, so the new CAPTCHA is already loaded.
       // We just wait 500ms for the browser to render it, then continue.
-      await page.waitForTimeout(500)
+      await page.waitForTimeout(getRandomDelay(500))
       continue
     }
 
@@ -188,7 +198,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
       const captchaImg = await page.$('img[src*="captcha"]')
       if (captchaImg) {
         await captchaImg.click()
-        await page.waitForTimeout(1000)
+        await page.waitForTimeout(getRandomDelay(1000))
       }
 
       continue

@@ -1,6 +1,16 @@
 const SITE1_URL = 'https://hoadondientu.gdt.gov.vn/'
 
 /**
+ * Generate a randomized delay with ±10% jitter (or at least ±50ms) to bypass bot heuristics.
+ */
+function getRandomDelay(baseMs) {
+  const jitter = Math.max(30, Math.floor(baseMs * 0.1)); // 10% jitter, min 30ms
+  const min = baseMs - jitter;
+  const max = baseMs + jitter;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/**
  * Run GDT Invoice Portal lookup for a single invoice.
  * @param {import('playwright').Page} page
  * @param {object} invoice - { invoiceCode, invoiceNumber, totalAmount }
@@ -19,7 +29,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       if (closeBtn) {
         onLog('Bypassing announcement popup...')
         await closeBtn.click()
-        await page.waitForTimeout(500) // Wait for modal fade out animation
+        await page.waitForTimeout(getRandomDelay(500)) // Wait for modal fade out animation
       }
     } catch (err) {}
   } else {
@@ -64,7 +74,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
     const selectEl = await page.$('div#lhdon, #lhdon, .ant-select')
     if (selectEl) {
       await selectEl.click()
-      await page.waitForTimeout(300)
+      await page.waitForTimeout(getRandomDelay(300))
       const optionEl = await page.$('.ant-select-dropdown-menu-item:has-text("giá trị gia tăng"), .ant-select-item-option-content:has-text("giá trị gia tăng")')
       if (optionEl) {
         await optionEl.click()
@@ -72,7 +82,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
         const firstItem = await page.$('.ant-select-dropdown-menu-item, .ant-select-item-option')
         if (firstItem) await firstItem.click()
       }
-      await page.waitForTimeout(300)
+      await page.waitForTimeout(getRandomDelay(300))
     }
   } catch (err) {}
 
@@ -89,7 +99,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       const closeBtn = await page.$('.ant-modal-close')
       if (closeBtn && await closeBtn.isVisible()) {
         await closeBtn.click()
-        await page.waitForTimeout(500) // Wait for modal fade out animation
+        await page.waitForTimeout(getRandomDelay(500)) // Wait for modal fade out animation
       }
     } catch (err) {}
 
@@ -109,7 +119,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
     ).catch(() => {})
 
     // Give the browser time to fully paint all image pieces
-    await new Promise(r => setTimeout(r, 800))
+    await new Promise(r => setTimeout(r, getRandomDelay(800)))
 
     // The CAPTCHA may be split across multiple img elements.
     // Compute the union bounding box covering ALL of them so we capture the full image.
@@ -184,7 +194,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
             await page.keyboard.type(char, { delay })
           }
           // Human muscle transition delay before hitting enter (500ms)
-          await page.waitForTimeout(500)
+          await page.waitForTimeout(getRandomDelay(500))
           // Press Enter to submit GDT's form
           await page.keyboard.press('Enter')
           // Wait for response to finish
