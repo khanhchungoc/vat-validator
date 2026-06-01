@@ -154,7 +154,11 @@ async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
         onLog('GDT returned HTTP 200 (Invoice not found). Capturing error screenshot...')
         console.log(`[Site 1] Invoice not found via API.`)
         // Wait for UI to render the "Không tìm thấy" error message
-        await page.waitForSelector('text=Không tìm thấy, text=không hợp lệ, .result-error', { timeout: 5000 }).catch(() => {})
+        await page.locator('text=Không tìm thấy')
+          .or(page.locator('text=không hợp lệ'))
+          .or(page.locator('.result-error'))
+          .waitFor({ state: 'visible', timeout: 5000 })
+          .catch(() => {})
         
         const screenshotBuffer = await page.screenshot({ fullPage: false })
         const screenshotBase64 = screenshotBuffer.toString('base64')
@@ -163,7 +167,10 @@ async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
         onLog('GDT returned HTTP 200 (Invoice verified!). Capturing success screenshot...')
         console.log(`[Site 1] Invoice verified successfully via API.`)
         // Wait for UI to render the "Tồn tại hóa đơn" success message
-        await page.waitForSelector('text=Tồn tại hóa đơn có thông tin trùng khớp, .result-success', { timeout: 5000 }).catch(() => {})
+        await page.locator('text=Tồn tại hóa đơn có thông tin trùng khớp')
+          .or(page.locator('.result-success'))
+          .waitFor({ state: 'visible', timeout: 5000 })
+          .catch(() => {})
         
         const screenshotBuffer = await page.screenshot({ fullPage: false })
         const screenshotBase64 = screenshotBuffer.toString('base64')
@@ -187,7 +194,12 @@ async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
   const screenshotBase64 = screenshotBuffer.toString('base64')
 
   // Determine pass/fail status from page content
-  const isInvalid = await page.$('text=Không tìm thấy, text=không hợp lệ, .result-error')
+  const isInvalid = await page.locator('text=Không tìm thấy')
+    .or(page.locator('text=không hợp lệ'))
+    .or(page.locator('.result-error'))
+    .first()
+    .isVisible()
+    .catch(() => false)
   const status = isInvalid ? 'invalid-invoice' : 'pass'
 
   return { ok: true, screenshotBase64, status }

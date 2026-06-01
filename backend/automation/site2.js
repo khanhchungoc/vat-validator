@@ -90,7 +90,12 @@ async function runSite2(page, invoice, onCaptcha, onLog = () => {}) {
   const screenshotBuffer = await page.screenshot({ fullPage: false })
   const screenshotBase64 = screenshotBuffer.toString('base64')
 
-  const isNotFound = await page.$('text=Không tìm thấy, text=không có kết quả, .no-result')
+  const isNotFound = await page.locator('text=Không tìm thấy')
+    .or(page.locator('text=không có kết quả'))
+    .or(page.locator('.no-result'))
+    .first()
+    .isVisible()
+    .catch(() => false)
   const status = isNotFound ? 'invalid-business' : 'pass'
 
   return { ok: true, screenshotBase64, status }
