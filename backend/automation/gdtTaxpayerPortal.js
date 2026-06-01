@@ -82,16 +82,13 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
       resolveAnswerSubmitted()
     })
 
-    // We wait for GDT's three distinct result states to appear in the DOM
-    const resultPromise = page.locator('text=Vui lòng nhập đúng mã xác nhận')
-      .or(page.locator('text=BẢNG THÔNG TIN TRA CỨU'))
-      .or(page.locator('text=Không tìm thấy người nộp thuế'))
-      .waitFor({ state: 'visible', timeout: 600000 }) // Wait up to 10 minutes
-      .catch(() => null)
+    // Site 2 submits standard HTML forms which trigger full-page reloads (navigation).
+    // We wait for the navigation event so that we don't match the old, pre-existing error messages from the previous attempts.
+    const navigationPromise = page.waitForNavigation({ waitUntil: 'networkidle', timeout: 600000 }).catch(() => null)
 
     // Wait for either the user to solve it in the GDT browser or Electron UI
     await Promise.race([
-      resultPromise,
+      navigationPromise,
       (async () => {
         await answerSubmittedPromise
         if (raceFinished) return
@@ -105,8 +102,8 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
           await page.keyboard.type(electronAnswer, { delay: 80 })
           // Press Enter to submit
           await page.keyboard.press('Enter')
-          // Wait for DOM updates to reflect
-          await resultPromise
+          // Wait for navigation to complete
+          await navigationPromise
         }
       })()
     ])
