@@ -8,19 +8,50 @@ const SITE1_URL = 'https://hoadondientu.gdt.gov.vn/'
  * @returns {{ ok: boolean, screenshotBase64?: string, status: 'pass'|'invalid-invoice'|'skipped' }}
  */
 async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
-  onLog('Navigating to GDT Portal (https://hoadondientu.gdt.gov.vn/)...')
-  await page.goto(SITE1_URL, { waitUntil: 'networkidle', timeout: 30000 })
+  const currentUrl = page.url()
+  if (!currentUrl.includes('hoadondientu.gdt.gov.vn')) {
+    onLog('Navigating to GDT Portal (https://hoadondientu.gdt.gov.vn/)...')
+    await page.goto(SITE1_URL, { waitUntil: 'networkidle', timeout: 30000 })
 
-  // Close the annoying "CỤC THUẾ THÔNG BÁO" modal if it pops up and blocks the screen
-  try {
-    const closeBtn = await page.$('.ant-modal-close')
-    if (closeBtn) {
-      onLog('Bypassing announcement popup...')
-      await closeBtn.click()
-      await page.waitForTimeout(500) // Wait for modal fade out animation
+    // Close the annoying "CỤC THUẾ THÔNG BÁO" modal if it pops up and blocks the screen
+    try {
+      const closeBtn = await page.$('.ant-modal-close')
+      if (closeBtn) {
+        onLog('Bypassing announcement popup...')
+        await closeBtn.click()
+        await page.waitForTimeout(500) // Wait for modal fade out animation
+      }
+    } catch (err) {}
+  } else {
+    onLog('Already on GDT Portal. Resetting form fields for new query...')
+    
+    // Save current captcha src before refresh so we can wait for the change
+    const oldSrc = await page.evaluate(() => {
+      const img = document.querySelector('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
+      return img ? img.getAttribute('src') : null
+    })
+
+    // Clear fields
+    await page.fill('input#nbmst', '')
+    await page.fill('input#khhdon', '')
+    await page.fill('input#shdon', '')
+    await page.fill('input#tgtttbso', '')
+    await page.fill('input#cvalue', '')
+
+    // Refresh CAPTCHA
+    const refreshBtn = await page.$('button.ant-btn-icon-only:visible')
+    if (refreshBtn) {
+      await refreshBtn.click()
+      // Wait for captcha src to update
+      await page.waitForFunction(
+        (prevSrc) => {
+          const img = document.querySelector('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
+          return img && img.getAttribute('src') !== prevSrc
+        },
+        oldSrc,
+        { timeout: 10000 }
+      ).catch(() => {})
     }
-  } catch (err) {
-    // Ignore if modal doesn't appear
   }
 
   onLog(`Filling invoice details: Seller Tax ID (${invoice.taxId}), Code, Number, Amount...`)
@@ -43,9 +74,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       }
       await page.waitForTimeout(300)
     }
-  } catch (err) {
-    // Ignore and proceed with default selection
-  }
+  } catch (err) {}
 
   // 3. Invoice Code, Number, and Amount
   await page.fill('input#khhdon, input[name="khhdon"], input[placeholder*="ký hiệu"], input[id*="khhdon"]', invoice.invoiceCode)
@@ -117,8 +146,20 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
     ).catch(() => null)
 
     onLog(`Submitting CAPTCHA answer: "${answer}"...`)
-    // Fill and submit CAPTCHA
-    await page.fill('input#cvalue, input[name="captcha"], input[id*="captcha"]', answer)
+    
+    // Save current CAPTCHA src before submitting so we can detect when it updates on 401
+    const oldCaptchaSrc = await page.evaluate(() => {
+      const img = document.querySelector('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
+      return img ? img.getAttribute('src') : null
+    })
+
+    // Fill and submit CAPTCHA with event-driven typing
+    const inputSelector = 'input#cvalue, input[name="captcha"], input[id*="captcha"]'
+    await page.focus(inputSelector)
+    await page.keyboard.press('Control+A')
+    await page.keyboard.press('Backspace')
+    await page.type(inputSelector, answer.trim().toUpperCase(), { delay: 100 })
+
     await page.click('button[type="submit"], input[type="submit"], button:has-text("Tìm kiếm")')
 
     const response = await responsePromise
@@ -136,6 +177,17 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
     if (response.status() === 401) {
       onLog('GDT returned HTTP 401 (Incorrect CAPTCHA). Refreshing and retrying...')
       console.log(`[GDT Invoice Portal] Incorrect CAPTCHA submitted (attempt ${attempt}). Retrying...`)
+
+      // Wait for captcha src to actually change to prevent screenshotting the old CAPTCHA
+      await page.waitForFunction(
+        (prevSrc) => {
+          const img = document.querySelector('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
+          return img && img.getAttribute('src') !== prevSrc
+        },
+        oldCaptchaSrc,
+        { timeout: 10000 }
+      ).catch(() => {})
+
       continue
     }
 
