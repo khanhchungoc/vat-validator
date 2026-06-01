@@ -194,6 +194,18 @@ export default function App() {
     }
   }, [])
 
+  const handleClearSession = useCallback(() => {
+    send({ type: 'clear-session' })
+    setCurrentSessionDir(null)
+    setDownloadUrls({ pdfUrl: null, xlsxUrl: null })
+    setLogs([])
+    setCaptchaData(null)
+    setProcessingError(null)
+    setAppError(null)
+    setIsStepWaiting(false)
+    setIsProcessing(false)
+  }, [send])
+
   const handleStartProcessing = useCallback(async (mode = 'auto') => {
     setDownloadUrls({ pdfUrl: null, xlsxUrl: null })
     setLogs([])
@@ -321,6 +333,15 @@ export default function App() {
                     >
                       + Add Invoice Manually
                     </button>
+                    {(invoices.length > 0 || currentSessionDir) && (
+                      <button 
+                        className="btn-danger-outline" 
+                        onClick={handleClearSession}
+                        title="Clear all invoices and start a new session"
+                      >
+                        🧹 Clear & New Session
+                      </button>
+                    )}
                   </>
                 ) : (
                   <>

@@ -1,4 +1,4 @@
-const { addInvoice, getInvoices, resetSkippedInvoices } = require('./invoiceStore')
+const { addInvoice, getInvoices, resetSkippedInvoices, clearInvoices } = require('./invoiceStore')
 const { saveSession } = require('./sessionManager')
 const engine = require('./automation/automationEngine')
 
@@ -51,6 +51,11 @@ async function handleMessage(ws, msg, wss) {
           saveSession(sessionDir, getInvoices())
         }
         broadcast(wss, { type: 'invoices-reset', payload: getInvoices() })
+        break
+      }
+      case 'clear-session': {
+        clearInvoices()
+        broadcast(wss, { type: 'invoices-reset', payload: [] })
         break
       }
       case 'add-manual-invoice': {
