@@ -80,80 +80,150 @@ async function startProcessing(sessionDir, mode = 'auto') {
   try {
     browser = await chromium.launch({ headless: false })
     const page = await browser.newPage()
+    await page.setViewportSize({ width: 1280, height: 900 })
 
     const invoices = getInvoices().filter(i => i.status === 'pending')
 
+    // ─────────────────────────────────────────────────────────
+    // PHASE 1: GDT Invoice Portal — process all invoices first
+    // ─────────────────────────────────────────────────────────
+    // phase1Results maps invoiceId → { status, site1Screenshot }
+    const phase1Results = {}
+
     for (const invoice of invoices) {
-      if (!isRunning) break // Check if stopped manually
+      if (!isRunning) break
 
       updateInvoiceStatus(invoice.id, 'processing')
       broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: 'processing' } })
       saveSession(sessionDir, getInvoices())
 
-      let finalStatus = 'pass'
       let site1Screenshot = null
-      let site2Screenshot = null
+      let site1Status = 'skipped'
       let processAttempt = 0
       const maxProcessAttempts = 3
-      
+
       while (processAttempt < maxProcessAttempts) {
         processAttempt++
         try {
-          // GDT Invoice Portal
           const site1Result = await runGdtInvoicePortal(
-            page, 
-            invoice, 
+            page,
+            invoice,
             (img, att) => waitForCaptchaAnswer(invoice.id, img, att),
             (msg) => logStep(invoice.id, `[GDT Invoice Portal] ${msg}`)
           )
-          if (site1Result.status === 'skipped') {
-            finalStatus = 'skipped'
-          } else {
-            // GDT Invoice Portal passed! Close the CAPTCHA modal immediately
+          site1Status = site1Result.status
+          if (site1Result.status !== 'skipped') {
             broadcast({ type: 'captcha-success', payload: { id: invoice.id } })
             site1Screenshot = saveScreenshot(sessionDir, invoice.id, 1, site1Result.screenshotBase64)
-            if (site1Result.status === 'invalid-invoice') {
-              finalStatus = 'invalid-invoice'
-            } else {
-              // GDT Taxpayer Portal (only if Invoice Portal passed)
-              const site2Result = await runGdtTaxpayerPortal(
-                page, 
-                invoice, 
-                (img, att) => waitForCaptchaAnswer(invoice.id, img, att),
-                (msg) => logStep(invoice.id, `[GDT Taxpayer Portal] ${msg}`)
-              )
-              if (site2Result.status === 'skipped') {
-                finalStatus = 'skipped'
-              } else {
-                site2Screenshot = saveScreenshot(sessionDir, invoice.id, 2, site2Result.screenshotBase64)
-                if (site2Result.status === 'invalid-business') finalStatus = 'invalid-business'
-              }
-            }
           }
-          break // break retry loop if successful
+          break
         } catch (e) {
-          console.error(`[Engine] Error on invoice ${invoice.id} (attempt ${processAttempt}):`, e.message)
+          console.error(`[Engine] Phase 1 error on invoice ${invoice.id} (attempt ${processAttempt}):`, e.message)
           broadcast({ type: 'processing-error', payload: { invoiceId: invoice.id, message: e.message } })
-          
           const userChoice = await new Promise(resolve => { captchaResolve = resolve })
           if (userChoice === 'skip' || userChoice === null) {
-            finalStatus = 'skipped'
+            site1Status = 'skipped'
             break
           }
-          // If choice is 'retry', it loops and tries again!
           if (processAttempt >= maxProcessAttempts) {
-            finalStatus = 'skipped'
+            site1Status = 'skipped'
             break
           }
         }
       }
 
-      updateInvoiceStatus(invoice.id, finalStatus, { site1Screenshot, site2Screenshot })
-      broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: finalStatus, site1Screenshot, site2Screenshot } })
+      phase1Results[invoice.id] = { status: site1Status, site1Screenshot }
+
+      // Invoices that didn't pass Site 1 are finalized now
+      if (site1Status !== 'pass') {
+        updateInvoiceStatus(invoice.id, site1Status, { site1Screenshot, site2Screenshot: null })
+        broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: site1Status, site1Screenshot, site2Screenshot: null } })
+      } else {
+        // Mark as intermediate so UI shows progress
+        updateInvoiceStatus(invoice.id, 'site1-done', { site1Screenshot, site2Screenshot: null })
+        broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: 'site1-done', site1Screenshot, site2Screenshot: null } })
+      }
       saveSession(sessionDir, getInvoices())
 
       await waitForStep()
     }
+
+    // ─────────────────────────────────────────────────────────
+    // PHASE 2: GDT Taxpayer Portal — one lookup per unique Tax ID
+    // ─────────────────────────────────────────────────────────
+    const passedInvoices = invoices.filter(inv => phase1Results[inv.id]?.status === 'pass')
+    const uniqueTaxIds = [...new Set(passedInvoices.map(inv => inv.taxId))]
+
+    // site2Cache maps taxId → { status, screenshotBase64 }
+    const site2Cache = {}
+
+    if (uniqueTaxIds.length > 0) {
+      logStep('engine', 'Phase 1 complete. Starting Tax ID lookups on GDT Taxpayer Portal...')
+    }
+
+    for (const taxId of uniqueTaxIds) {
+      if (!isRunning) break
+
+      // Use first invoice with this Tax ID as representative for CAPTCHA prompting
+      const representativeInvoice = passedInvoices.find(inv => inv.taxId === taxId)
+
+      let site2Status = 'skipped'
+      let site2ScreenshotBase64 = null
+      let processAttempt = 0
+      const maxProcessAttempts = 3
+
+      while (processAttempt < maxProcessAttempts) {
+        processAttempt++
+        try {
+          const site2Result = await runGdtTaxpayerPortal(
+            page,
+            representativeInvoice,
+            (img, att) => waitForCaptchaAnswer(representativeInvoice.id, img, att),
+            (msg) => logStep(representativeInvoice.id, `[GDT Taxpayer Portal] [TaxID: ${taxId}] ${msg}`)
+          )
+          site2Status = site2Result.status
+          if (site2Result.status !== 'skipped') {
+            broadcast({ type: 'captcha-success', payload: { id: representativeInvoice.id } })
+            site2ScreenshotBase64 = site2Result.screenshotBase64
+          }
+          break
+        } catch (e) {
+          console.error(`[Engine] Phase 2 error on Tax ID ${taxId} (attempt ${processAttempt}):`, e.message)
+          broadcast({ type: 'processing-error', payload: { invoiceId: representativeInvoice.id, message: e.message } })
+          const userChoice = await new Promise(resolve => { captchaResolve = resolve })
+          if (userChoice === 'skip' || userChoice === null) {
+            site2Status = 'skipped'
+            break
+          }
+          if (processAttempt >= maxProcessAttempts) {
+            site2Status = 'skipped'
+            break
+          }
+        }
+      }
+
+      site2Cache[taxId] = { status: site2Status, screenshotBase64: site2ScreenshotBase64 }
+    }
+
+    // Apply Phase 2 results: copy screenshot once per invoice that passed Phase 1
+    for (const invoice of passedInvoices) {
+      if (!isRunning) break
+      const cached = site2Cache[invoice.taxId]
+      const { site1Screenshot } = phase1Results[invoice.id]
+
+      let site2Screenshot = null
+      let finalStatus = cached?.status ?? 'skipped'
+
+      if (cached && cached.screenshotBase64) {
+        // Copy the screenshot buffer to this invoice's own file
+        site2Screenshot = saveScreenshot(sessionDir, invoice.id, 2, cached.screenshotBase64)
+      }
+
+      updateInvoiceStatus(invoice.id, finalStatus, { site1Screenshot, site2Screenshot })
+      broadcast({ type: 'invoice-status', payload: { id: invoice.id, status: finalStatus, site1Screenshot, site2Screenshot } })
+      saveSession(sessionDir, getInvoices())
+    }
+
     return { ok: true }
   } catch (e) {
     console.error('[Engine] Fatal error:', e.message)
@@ -165,14 +235,13 @@ async function startProcessing(sessionDir, mode = 'auto') {
     isRunning = false
     captchaResolve = null
     stepResolve = null
-    
+
     let generated = false
     if (currentSessionDir) {
       saveSession(currentSessionDir, getInvoices())
-      
+
       try {
         const allInvoices = getInvoices()
-        // Generate outputs if there are invoices to report
         if (allInvoices.length > 0) {
           const [pdfPath, xlsxPath] = await Promise.all([
             generatePDF(currentSessionDir, allInvoices),

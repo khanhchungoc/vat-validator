@@ -16,6 +16,14 @@ jest.mock('../output/pdfGenerator', () => ({
 jest.mock('../output/xlsxGenerator', () => ({
   generateXLSX: jest.fn().mockReturnValue('mock-xlsx-path')
 }))
+jest.mock('fs', () => {
+  const actualFs = jest.requireActual('fs')
+  return {
+    ...actualFs,
+    mkdirSync: jest.fn(),
+    writeFileSync: jest.fn()
+  }
+})
 
 describe('Automation Engine Session Saving', () => {
   let mockPage
@@ -66,8 +74,6 @@ describe('Automation Engine Session Saving', () => {
       { id: 'inv1', taxId: 'TAX001', status: 'pending' },
       { id: 'inv2', taxId: 'TAX001', status: 'pending' }
     ])
-    runGdtInvoicePortal.mockResolvedValue({ status: 'pass', screenshotBase64: 'abc' })
-    runGdtTaxpayerPortal.mockResolvedValue({ status: 'pass', screenshotBase64: 'def' })
 
     await engine.startProcessing('test-session-dir', 'auto')
 
