@@ -1,4 +1,5 @@
-const { addInvoice } = require('./invoiceStore')
+const { addInvoice, getInvoices, resetSkippedInvoices } = require('./invoiceStore')
+const { saveSession } = require('./sessionManager')
 const engine = require('./automation/automationEngine')
 
 async function handleMessage(ws, msg, wss) {
@@ -82,6 +83,15 @@ async function handleMessage(ws, msg, wss) {
       } else {
         broadcast(wss, { type: 'invoice-added', payload: invoice })
       }
+      break
+    }
+    case 'reset-skipped': {
+      const { sessionDir } = msg.payload || {}
+      const count = resetSkippedInvoices()
+      if (count > 0 && sessionDir) {
+        saveSession(sessionDir, getInvoices())
+      }
+      broadcast(wss, { type: 'invoices-reset', payload: getInvoices() })
       break
     }
     default:

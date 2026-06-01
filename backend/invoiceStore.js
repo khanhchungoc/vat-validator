@@ -31,4 +31,18 @@ function loadInvoices(list) {
   invoices = list
 }
 
-module.exports = { addInvoice, getInvoices, updateInvoiceStatus, clearInvoices, loadInvoices }
+function resetSkippedInvoices() {
+  let count = 0
+  invoices.forEach(inv => {
+    if (inv.status === 'skipped') {
+      inv.status = 'pending'
+      inv.site1Screenshot = null
+      inv.site2Screenshot = null
+      count++
+    }
+  })
+  return count
+}
+
+
+module.exports = { addInvoice, getInvoices, updateInvoiceStatus, clearInvoices, loadInvoices, resetSkippedInvoices }
