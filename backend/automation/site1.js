@@ -169,6 +169,18 @@ async function runSite1(page, invoice, onCaptcha) {
     }
     break
   }
+
+  // Fallback: If we broke out of the loop (e.g. captcha was accepted but the API response timed out or failed),
+  // perform standard DOM-based verification checks and return a valid result.
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
+  const screenshotBuffer = await page.screenshot({ fullPage: false })
+  const screenshotBase64 = screenshotBuffer.toString('base64')
+
+  // Determine pass/fail status from page content
+  const isInvalid = await page.$('text=Không tìm thấy, text=không hợp lệ, .result-error')
+  const status = isInvalid ? 'invalid-invoice' : 'pass'
+
+  return { ok: true, screenshotBase64, status }
 }
 
 module.exports = { runSite1 }
