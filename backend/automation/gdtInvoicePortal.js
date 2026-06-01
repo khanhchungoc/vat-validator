@@ -140,29 +140,51 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
     } catch (e) {}
 
     let userSkipped = false
+    let electronAnswer = null
+
+    let resolveAnswerSubmitted
+    const answerSubmittedPromise = new Promise(resolve => {
+      resolveAnswerSubmitted = resolve
+    })
+
     const skipPromise = onCaptcha(captchaBase64, attempt).then(ans => {
       if (ans === null) {
         userSkipped = true
+      } else {
+        electronAnswer = ans
       }
+      resolveAnswerSubmitted()
+    }).catch(err => {
+      console.error('[GDT Invoice Portal] CAPTCHA solving failed:', err.message)
+      userSkipped = true
+      resolveAnswerSubmitted()
     })
 
-    // Set up network response listener for the guest-invoices API call
+    // Race GDT's API response directly (user solved directly in browser)
     const responsePromise = page.waitForResponse(response => 
       response.url().includes('/api/sco-query/guest-invoices'),
-      { timeout: 600000 } // Wait up to 10 minutes for user to solve captcha
+      { timeout: 600000 } // 10 minutes timeout
     ).catch(() => null)
 
-    // Wait for either the user to click skip or the network response to arrive
     const response = await Promise.race([
       responsePromise,
-      new Promise(resolve => {
-        const interval = setInterval(() => {
-          if (userSkipped) {
-            clearInterval(interval)
-            resolve(null)
-          }
-        }, 100)
-      })
+      (async () => {
+        await answerSubmittedPromise
+        if (userSkipped) return null
+        if (electronAnswer) {
+          onLog(`Typing CAPTCHA answer "${electronAnswer}" into GDT portal...`)
+          // Clear and focus GDT's input field
+          await page.fill('input#cvalue', '')
+          await page.focus('input#cvalue')
+          // Simulate human typing to satisfy React/AntD state listeners
+          await page.keyboard.type(electronAnswer, { delay: 80 })
+          // Submit the form
+          await page.keyboard.press('Enter')
+          // Wait for response to finish
+          return await responsePromise
+        }
+        return null
+      })()
     ])
 
     if (userSkipped || !response) {
@@ -175,7 +197,10 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       console.log(`[GDT Invoice Portal] Incorrect CAPTCHA submitted (attempt ${attempt}). Retrying...`)
 
       // Wait for captcha src to actually change to prevent screenshotting the old CAPTCHA
-      const oldCaptchaSrc = captchaBase64
+      const oldCaptchaSrc = await page.evaluate(() => {
+        const img = document.querySelector('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
+        return img ? img.getAttribute('src') : null
+      })
       await page.waitForFunction(
         (prevSrc) => {
           const img = document.querySelector('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
