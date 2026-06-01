@@ -1,14 +1,17 @@
 const SITE1_URL = 'https://hoadondientu.gdt.gov.vn/'
 
+const JITTER_FACTOR = 0.07
+
 /**
- * Generate a randomized delay with ±10% jitter (or at least ±50ms) to bypass bot heuristics.
+ * Generate a randomized delay with ±7% dynamic timing jitter to bypass bot heuristics.
  */
 function getRandomDelay(baseMs) {
-  const jitter = Math.max(30, Math.floor(baseMs * 0.1)); // 10% jitter, min 30ms
-  const min = baseMs - jitter;
-  const max = baseMs + jitter;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  const jitter = Math.round(baseMs * JITTER_FACTOR) // 7% dynamic jitter
+  const min = baseMs - jitter
+  const max = baseMs + jitter
+  return Math.floor(Math.random() * (max - min + 1)) + min
 }
+
 
 /**
  * Run GDT Invoice Portal lookup for a single invoice.
