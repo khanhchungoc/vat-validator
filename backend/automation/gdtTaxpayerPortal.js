@@ -100,9 +100,16 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
           await page.focus('input#captcha')
           // Simulate human typing
           await page.keyboard.type(electronAnswer, { delay: 80 })
-          // Click GDT's submit button (can be input.subBtn, .subBtn, input[type="submit"], text=Tra cứu, etc.)
-          const submitBtn = await page.$('input.subBtn, .subBtn, input[type="submit"], button[type="submit"], text=Tra cứu, text=Tìm kiếm')
-          if (submitBtn) {
+          // Locate GDT's submit button using standard Playwright locator or chain
+          const submitBtn = page.locator('input.subBtn')
+            .or(page.locator('.subBtn'))
+            .or(page.locator('input[type="submit"]'))
+            .or(page.locator('button[type="submit"]'))
+            .or(page.locator('text=Tra cứu'))
+            .or(page.locator('text=Tìm kiếm'))
+            .first()
+
+          if (await submitBtn.isVisible().catch(() => false)) {
             await submitBtn.click()
           } else {
             // Fallback: Press Enter
