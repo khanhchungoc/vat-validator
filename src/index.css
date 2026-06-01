@@ -282,5 +282,214 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+/* Sidebar Sliding Layout */
+.app-layout {
+  display: flex;
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+.layout-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  transition: all 0.3s ease;
+}
+.layout-right {
+  width: 360px;
+  flex-shrink: 0;
+  margin-left: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  margin-right: 0;
+  opacity: 1;
+}
+
+/* When sidebar is hidden */
+.app-layout.no-sidebar .layout-right {
+  margin-right: -384px; /* -360px (width) + -24px (margin/gap) */
+  opacity: 0;
+  pointer-events: none;
+}
 
 
+/* Slide in button */
+.btn-console-toggle {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.btn-console-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+}
+.btn-console-toggle.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  color: #60a5fa;
+}
+
+/* Console Styling */
+.live-console {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+}
+.live-console.expanded {
+  flex: 1;
+  min-height: 250px;
+}
+.live-console.collapsed {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+.console-accordion-header {
+  background: rgba(30, 41, 59, 0.7);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.console-header-btn {
+  background: none;
+  border: none;
+  flex: 1;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.console-header-btn:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.console-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+.console-close-btn:hover {
+  color: var(--fail);
+}
+.console-status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.console-status-indicator.idle {
+  background: #64748b;
+  box-shadow: 0 0 4px #64748b;
+}
+.console-status-indicator.active {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: console-indicator-pulse 1.5s infinite;
+}
+@keyframes console-indicator-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+.console-chevron {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  transition: transform 0.3s;
+}
+.console-chevron.open {
+  transform: rotate(180deg);
+}
+.console-body {
+  flex: 1;
+  min-height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.console-body::-webkit-scrollbar {
+  width: 6px;
+}
+.console-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.console-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+}
+.console-body::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+.console-placeholder {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-style: italic;
+  text-align: center;
+  font-size: 0.75rem;
+}
+.console-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.console-line {
+  display: flex;
+  gap: 8px;
+  word-break: break-all;
+}
+.console-time {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+.console-text {
+  color: #e2e8f0;
+}
+
+/* Media Query Responsive Collapse */
+@media (max-width: 960px) {
+  .app-layout {
+    flex-direction: column;
+  }
+  .layout-right {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 16px;
+  }
+  .app-layout.no-sidebar .layout-right {
+    display: none;
+  }
+}
