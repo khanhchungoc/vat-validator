@@ -14,9 +14,10 @@ function stripBranchSuffix(taxId) {
  * @param {function} onCaptcha - async (base64Image) => string answer
  * @returns {{ ok: boolean, screenshotBase64?: string, status: 'pass'|'invalid-business'|'skipped' }}
  */
-async function runSite2(page, invoice, onCaptcha) {
+async function runSite2(page, invoice, onCaptcha, onLog = () => {}) {
   const rootTaxId = stripBranchSuffix(invoice.taxId)
-
+  onLog(`Stripping branch suffix from Tax ID (using: ${rootTaxId})...`)
+  onLog('Navigating to Taxpayer Portal (https://tracuunnt.gdt.gov.vn/)...')
   await page.goto(SITE2_URL, { waitUntil: 'networkidle', timeout: 30000 })
 
   // Fill Tax ID field
@@ -25,6 +26,7 @@ async function runSite2(page, invoice, onCaptcha) {
   let attempt = 0
   while (true) {
     attempt++
+    onLog(`Capturing CAPTCHA image (attempt ${attempt})...`)
     // Capture CAPTCHA image
     const captchaEl = await page.$('img[src*="captcha"]')
     if (!captchaEl) throw new Error('CAPTCHA element not found on Site 2')
@@ -43,12 +45,14 @@ async function runSite2(page, invoice, onCaptcha) {
     const captchaBuffer = await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
 
+    onLog('Prompting user for CAPTCHA input...')
     // Ask frontend for answer
     const answer = await onCaptcha(captchaBase64, attempt)
     if (answer === null) {
       return { ok: false, status: 'skipped' }
     }
 
+    onLog(`Submitting CAPTCHA answer: "${answer}"...`)
     // Fill and submit CAPTCHA
     await page.fill('input#captcha, input[name="captcha"]', answer)
     await page.click('input.subBtn, .subBtn, button[type="submit"], input[type="submit"], a:has-text("Tìm kiếm")')
@@ -58,6 +62,7 @@ async function runSite2(page, invoice, onCaptcha) {
     await page.waitForTimeout(1000)
     const formIsStillVisible = await page.$('input#captcha')
     if (formIsStillVisible && await formIsStillVisible.isVisible()) {
+      onLog('CAPTCHA incorrect. Refreshing and retrying...')
       continue
     }
 
@@ -70,6 +75,11 @@ async function runSite2(page, invoice, onCaptcha) {
 
   // Check for not-found result
   const isNotFound = await page.$('text=Không tìm thấy, text=không có kết quả, .no-result')
+  if (isNotFound) {
+    onLog('Taxpayer not found (Invalid business!). Capturing error screenshot...')
+  } else {
+    onLog('Verification successful! Capturing business status screenshot...')
+  }
   const status = isNotFound ? 'invalid-business' : 'pass'
 
   return { ok: true, screenshotBase64, status }

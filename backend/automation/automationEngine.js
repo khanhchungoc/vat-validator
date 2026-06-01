@@ -22,6 +22,18 @@ function broadcast(msg) {
   if (broadcastFn) broadcastFn(msg)
 }
 
+function logStep(invoiceId, message) {
+  console.log(`[LogStep] [${invoiceId}]: ${message}`)
+  broadcast({
+    type: 'processing-log',
+    payload: {
+      invoiceId,
+      message,
+      timestamp: new Date().toLocaleTimeString()
+    }
+  })
+}
+
 function saveScreenshot(sessionDir, invoiceId, site, base64Data) {
   const screenshotsDir = path.join(sessionDir, 'screenshots')
   fs.mkdirSync(screenshotsDir, { recursive: true })
@@ -62,6 +74,9 @@ async function startProcessing(sessionDir, mode = 'auto') {
   stepMode = mode === 'step'
   currentSessionDir = sessionDir
 
+  // Clear client activity logs at start
+  broadcast({ type: 'processing-log-clear' })
+
   try {
     browser = await chromium.launch({ headless: true })
     const page = await browser.newPage()
@@ -85,7 +100,12 @@ async function startProcessing(sessionDir, mode = 'auto') {
         processAttempt++
         try {
           // Site 1
-          const site1Result = await runSite1(page, invoice, (img, att) => waitForCaptchaAnswer(invoice.id, img, att))
+          const site1Result = await runSite1(
+            page, 
+            invoice, 
+            (img, att) => waitForCaptchaAnswer(invoice.id, img, att),
+            (msg) => logStep(invoice.id, `[Site 1] ${msg}`)
+          )
           if (site1Result.status === 'skipped') {
             finalStatus = 'skipped'
           } else {
@@ -96,7 +116,12 @@ async function startProcessing(sessionDir, mode = 'auto') {
               finalStatus = 'invalid-invoice'
             } else {
               // Site 2 (only if Site 1 passed)
-              const site2Result = await runSite2(page, invoice, (img, att) => waitForCaptchaAnswer(invoice.id, img, att))
+              const site2Result = await runSite2(
+                page, 
+                invoice, 
+                (img, att) => waitForCaptchaAnswer(invoice.id, img, att),
+                (msg) => logStep(invoice.id, `[Site 2] ${msg}`)
+              )
               if (site2Result.status === 'skipped') {
                 finalStatus = 'skipped'
               } else {

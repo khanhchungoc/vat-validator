@@ -7,13 +7,15 @@ const SITE1_URL = 'https://hoadondientu.gdt.gov.vn/'
  * @param {function} onCaptcha - async (base64Image) => string answer
  * @returns {{ ok: boolean, screenshotBase64?: string, status: 'pass'|'invalid-invoice'|'skipped' }}
  */
-async function runSite1(page, invoice, onCaptcha) {
+async function runSite1(page, invoice, onCaptcha, onLog = () => {}) {
+  onLog('Navigating to GDT Portal (https://hoadondientu.gdt.gov.vn/)...')
   await page.goto(SITE1_URL, { waitUntil: 'networkidle', timeout: 30000 })
 
   // Close the annoying "CỤC THUẾ THÔNG BÁO" modal if it pops up and blocks the screen
   try {
     const closeBtn = await page.$('.ant-modal-close')
     if (closeBtn) {
+      onLog('Bypassing announcement popup...')
       await closeBtn.click()
       await page.waitForTimeout(500) // Wait for modal fade out animation
     }
@@ -21,6 +23,7 @@ async function runSite1(page, invoice, onCaptcha) {
     // Ignore if modal doesn't appear
   }
 
+  onLog(`Filling invoice details: Seller Tax ID (${invoice.taxId}), Code, Number, Amount...`)
   // Fill form fields
   // 1. Seller Tax ID
   await page.fill('input#nbmst, input[name="mstNban"], input[placeholder*="người bán"], input[id*="mstNban"]', invoice.taxId)
@@ -61,6 +64,7 @@ async function runSite1(page, invoice, onCaptcha) {
       }
     } catch (err) {}
 
+    onLog(`Capturing CAPTCHA image (attempt ${attempt})...`)
     // Capture CAPTCHA image
     const captchaEl = await page.$('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
     if (!captchaEl) throw new Error('CAPTCHA element not found on Site 1')
@@ -99,6 +103,7 @@ async function runSite1(page, invoice, onCaptcha) {
       : await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
 
+    onLog('Prompting user for CAPTCHA input...')
     // Ask frontend for answer (may return null if user skipped)
     const answer = await onCaptcha(captchaBase64, attempt)
     if (answer === null) {
@@ -111,6 +116,7 @@ async function runSite1(page, invoice, onCaptcha) {
       { timeout: 30000 }
     ).catch(() => null)
 
+    onLog(`Submitting CAPTCHA answer: "${answer}"...`)
     // Fill and submit CAPTCHA
     await page.fill('input#cvalue, input[name="captcha"], input[id*="captcha"]', answer)
     await page.click('button[type="submit"], input[type="submit"], button:has-text("Tìm kiếm")')
@@ -128,6 +134,7 @@ async function runSite1(page, invoice, onCaptcha) {
 
     // 1. Check for incorrect CAPTCHA (HTTP 401 Unauthorized)
     if (response.status() === 401) {
+      onLog('GDT returned HTTP 401 (Incorrect CAPTCHA). Refreshing and retrying...')
       console.log(`[Site 1] Incorrect CAPTCHA submitted (attempt ${attempt}). Retrying...`)
       continue
     }
@@ -144,6 +151,7 @@ async function runSite1(page, invoice, onCaptcha) {
 
       // If the body is null or represents an empty object/array, the invoice does not exist
       if (!body || Object.keys(body).length === 0) {
+        onLog('GDT returned HTTP 200 (Invoice not found). Capturing error screenshot...')
         console.log(`[Site 1] Invoice not found via API.`)
         // Wait for UI to render the "Không tìm thấy" error message
         await page.waitForSelector('text=Không tìm thấy, text=không hợp lệ, .result-error', { timeout: 5000 }).catch(() => {})
@@ -152,6 +160,7 @@ async function runSite1(page, invoice, onCaptcha) {
         const screenshotBase64 = screenshotBuffer.toString('base64')
         return { ok: true, screenshotBase64, status: 'invalid-invoice' }
       } else {
+        onLog('GDT returned HTTP 200 (Invoice verified!). Capturing success screenshot...')
         console.log(`[Site 1] Invoice verified successfully via API.`)
         // Wait for UI to render the "Tồn tại hóa đơn" success message
         await page.waitForSelector('text=Tồn tại hóa đơn có thông tin trùng khớp, .result-success', { timeout: 5000 }).catch(() => {})
@@ -172,6 +181,7 @@ async function runSite1(page, invoice, onCaptcha) {
 
   // Fallback: If we broke out of the loop (e.g. captcha was accepted but the API response timed out or failed),
   // perform standard DOM-based verification checks and return a valid result.
+  onLog('API response timed out or failed. Falling back to DOM verification checks...')
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
   const screenshotBuffer = await page.screenshot({ fullPage: false })
   const screenshotBase64 = screenshotBuffer.toString('base64')
