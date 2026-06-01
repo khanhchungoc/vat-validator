@@ -47,7 +47,11 @@ async function runSite2(page, invoice, onCaptcha, onLog = () => {}) {
     await page.click('input.subBtn, .subBtn, button[type="submit"], input[type="submit"], a:has-text("Tìm kiếm")')
 
     // Wait for any of GDT's three distinct result states to appear in the DOM
-    await page.waitForSelector('text=Vui lòng nhập đúng mã xác nhận, text=BẢNG THÔNG TIN TRA CỨU, text=Không tìm thấy người nộp thuế', { timeout: 15000 }).catch(() => {})
+    await page.locator('text=Vui lòng nhập đúng mã xác nhận')
+      .or(page.locator('text=BẢNG THÔNG TIN TRA CỨU'))
+      .or(page.locator('text=Không tìm thấy người nộp thuế'))
+      .waitFor({ state: 'visible', timeout: 15000 })
+      .catch(() => {})
 
     // Check which element won the race
     const hasWrongCaptcha = await page.$('text=Vui lòng nhập đúng mã xác nhận')
