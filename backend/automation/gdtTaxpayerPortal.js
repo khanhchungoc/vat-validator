@@ -230,4 +230,4 @@ function stripBranchSuffix(taxId) {
   return taxId.split('-')[0]
 }
 
-module.exports = { runGdtTaxpayerPortal, stripBranchSuffix }
+module.exports = { runGdtTaxpayerPortal, stripBranchSuffix, getRandomDelay }
