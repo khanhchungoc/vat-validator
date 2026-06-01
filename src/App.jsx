@@ -18,6 +18,7 @@ import ErrorBanner from './components/ErrorBanner'
 import ModeToggle from './components/ModeToggle'
 import ProgressBar from './components/ProgressBar'
 import StepButton from './components/StepButton'
+import LiveConsole from './components/LiveConsole'
 
 
 
@@ -35,6 +36,8 @@ export default function App() {
   const [duplicates, setDuplicates] = useState([])
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
   const [processingError, setProcessingError] = useState(null)
+  const [logs, setLogs] = useState([])
+  const [showConsole, setShowConsole] = useState(false)
 
   const handleWsMessage = useCallback((msg) => {
     if (msg.type === 'ws-status') {
@@ -89,6 +92,15 @@ export default function App() {
     }
     if (msg.type === 'error') {
       setAppError(msg.payload)
+    }
+    if (msg.type === 'invoices-reset') {
+      setInvoices(msg.payload)
+    }
+    if (msg.type === 'processing-log-clear') {
+      setLogs([])
+    }
+    if (msg.type === 'processing-log') {
+      setLogs(prev => [...prev, msg.payload])
     }
   }, [])
 
@@ -184,6 +196,8 @@ export default function App() {
 
   const handleStartProcessing = useCallback(async (mode = 'auto') => {
     setDownloadUrls({ pdfUrl: null, xlsxUrl: null })
+    setLogs([])
+    setShowConsole(true)
     let sessionDir = currentSessionDir
     if (!sessionDir) {
       try {
@@ -242,72 +256,101 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>VATOCR</h1>
-        <span className="ws-status">{wsStatus}</span>
-      </header>
-      <main className="app-main">
-        {appError && (
-          <div style={{
-            background: 'rgba(220,53,69,0.15)', border: '1px solid #dc3545',
-            borderRadius: 8, padding: '14px 18px', marginBottom: 16,
-            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12
-          }}>
-            <div style={{ flex: 1 }}>
-              <strong style={{ color: '#ff6b6b', display: 'block', marginBottom: 6 }}>⚠️ Processing Error</strong>
-              <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#e0e0e0', userSelect: 'text' }}>{appError}</pre>
-            </div>
-            <button onClick={() => setAppError(null)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0 }}>✕</button>
-          </div>
-        )}
-
-        {!currentSessionDir && invoices.length === 0 && (
-          <ResumePanel onResume={handleResume} />
-        )}
-        
-        <DropZone onFilesUploaded={handleFilesUploaded} disabled={isProcessing} />
-        
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginTop: 12 }}>
-          {!isProcessing ? (
-            <>
-              <button 
-                className="btn-primary" 
-                onClick={() => handleStartProcessing(processingMode)}
-                disabled={invoices.length === 0}
-              >
-                🚀 Start Processing
-              </button>
-              <ModeToggle 
-                mode={processingMode} 
-                onChange={handleModeChange} 
-                disabled={invoices.length === 0} 
-              />
-              <button 
-                className="btn-secondary" 
-                onClick={() => setShowManualForm(true)}
-              >
-                + Add Invoice Manually
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="btn-stop" onClick={handleStopProcessing}>
-                🛑 Stop
-              </button>
-              <ModeToggle 
-                mode={processingMode} 
-                onChange={handleModeChange} 
-                disabled={false} 
-              />
-            </>
-          )}
+        <h1>VAT-validator</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button 
+            className={`btn-console-toggle ${showConsole ? 'active' : ''}`}
+            onClick={() => setShowConsole(!showConsole)}
+            title="Toggle Live Activity Console"
+          >
+            {showConsole ? '✕ Close Log' : '📋 Activity Log'}
+          </button>
+          <span className="ws-status">{wsStatus}</span>
         </div>
+      </header>
+      <main className="app-main" style={{ maxWidth: 'none', margin: '0', padding: '0', display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div className={`app-layout ${showConsole ? 'with-sidebar' : 'no-sidebar'}`}>
+          <div className="layout-left">
+            {appError && (
+              <div style={{
+                background: 'rgba(220,53,69,0.15)', border: '1px solid #dc3545',
+                borderRadius: 8, padding: '14px 18px', marginBottom: 16,
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12
+              }}>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ color: '#ff6b6b', display: 'block', marginBottom: 6 }}>⚠️ Processing Error</strong>
+                  <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#e0e0e0', userSelect: 'text' }}>{appError}</pre>
+                </div>
+                <button onClick={() => setAppError(null)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0 }}>✕</button>
+              </div>
+            )}
 
-        <StepButton visible={isProcessing && isStepWaiting} onStep={handleAdvanceStep} />
-        <ProgressBar invoices={invoices} />
+            {!currentSessionDir && invoices.length === 0 && (
+              <ResumePanel onResume={handleResume} />
+            )}
+            
+            <DropZone onFilesUploaded={handleFilesUploaded} disabled={isProcessing} />
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginTop: 12 }}>
+              {!isProcessing ? (
+                <>
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => handleStartProcessing(processingMode)}
+                    disabled={invoices.length === 0}
+                  >
+                    🚀 Start Processing
+                  </button>
+                  {invoices.some(i => i.status === 'skipped') && (
+                    <button 
+                      className="btn-secondary" 
+                      onClick={() => send({ type: 'reset-skipped', payload: { sessionDir: currentSessionDir } })}
+                    >
+                      🔄 Reset Skipped to Pending
+                    </button>
+                  )}
+                  <ModeToggle 
+                    mode={processingMode} 
+                    onChange={handleModeChange} 
+                    disabled={invoices.length === 0} 
+                  />
+                  <button 
+                    className="btn-secondary" 
+                    onClick={() => setShowManualForm(true)}
+                  >
+                    + Add Invoice Manually
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="btn-stop" onClick={handleStopProcessing}>
+                    🛑 Stop
+                  </button>
+                  <ModeToggle 
+                    mode={processingMode} 
+                    onChange={handleModeChange} 
+                    disabled={false} 
+                  />
+                </>
+              )}
+            </div>
 
-        <ErrorBanner error={processingError} onRetry={handleRetry} onSkip={handleErrorSkip} />
-        <InvoiceQueue invoices={invoices} />
-        <DownloadButtons pdfUrl={downloadUrls.pdfUrl} xlsxUrl={downloadUrls.xlsxUrl} />
+            <StepButton visible={isProcessing && isStepWaiting} onStep={handleAdvanceStep} />
+            <ProgressBar invoices={invoices} />
+
+            <ErrorBanner error={processingError} onRetry={handleRetry} onSkip={handleErrorSkip} />
+            <InvoiceQueue invoices={invoices} />
+            <DownloadButtons pdfUrl={downloadUrls.pdfUrl} xlsxUrl={downloadUrls.xlsxUrl} />
+          </div>
+
+          <div className="layout-right">
+            <LiveConsole 
+              logs={logs} 
+              isProcessing={isProcessing} 
+              onClose={() => setShowConsole(false)} 
+            />
+          </div>
+        </div>
       </main>
       {showManualForm && (
         <ManualEntryForm
