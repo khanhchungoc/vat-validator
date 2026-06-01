@@ -78,7 +78,7 @@ async function startProcessing(sessionDir, mode = 'auto') {
   broadcast({ type: 'processing-log-clear' })
 
   try {
-    browser = await chromium.launch({ headless: true })
+    browser = await chromium.launch({ headless: false })
     const page = await browser.newPage()
 
     const invoices = getInvoices().filter(i => i.status === 'pending')

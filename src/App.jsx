@@ -124,7 +124,7 @@ export default function App() {
       setShowDuplicateWarning(true)
     }
     if (otherErrors.length > 0) {
-      alert(otherErrors.join('\n'))
+      setAppError(otherErrors.join('\n'))
     }
   }, [])
 
@@ -143,7 +143,7 @@ export default function App() {
     if (sent) {
       setShowManualForm(false)
     } else {
-      alert('Failed to send manual invoice: WebSocket is disconnected.')
+      setAppError('Failed to send manual invoice: WebSocket is disconnected.')
     }
   }, [send])
 
@@ -187,10 +187,10 @@ export default function App() {
         setInvoices(data.invoices)
         setCurrentSessionDir(sessionDir)
       } else {
-        alert(data.error || 'Failed to resume session')
+        setAppError(data.error || 'Failed to resume session')
       }
     } catch (e) {
-      alert('Failed to resume session')
+      setAppError('Failed to resume session')
     }
   }, [])
 
@@ -207,11 +207,11 @@ export default function App() {
           sessionDir = data.sessionDir
           setCurrentSessionDir(sessionDir)
         } else {
-          alert('Failed to create session: ' + (data.error || 'Unknown error'))
+          setAppError('Failed to create session: ' + (data.error || 'Unknown error'))
           return
         }
       } catch (e) {
-        alert('Failed to create session')
+        setAppError('Failed to create session')
         return
       }
     }
@@ -219,7 +219,7 @@ export default function App() {
     setIsProcessing(true)
     const sent = send({ type: 'start-processing', payload: { sessionDir, mode } })
     if (!sent) {
-      alert('Failed to start processing: WebSocket is disconnected.')
+      setAppError('Failed to start processing: WebSocket is disconnected.')
       setIsProcessing(false)
     }
   }, [currentSessionDir, send])
@@ -227,7 +227,7 @@ export default function App() {
   const handleStopProcessing = useCallback(() => {
     const sent = send({ type: 'stop-processing' })
     if (!sent) {
-      alert('Failed to stop processing: WebSocket is disconnected.')
+      setAppError('Failed to stop processing: WebSocket is disconnected.')
     } else {
       setIsProcessing(false)
       setIsStepWaiting(false)
@@ -237,7 +237,7 @@ export default function App() {
   const handleAdvanceStep = useCallback(() => {
     const sent = send({ type: 'advance-step' })
     if (!sent) {
-      alert('Failed to advance step: WebSocket is disconnected.')
+      setAppError('Failed to advance step: WebSocket is disconnected.')
     } else {
       setIsStepWaiting(false)
     }
@@ -248,7 +248,7 @@ export default function App() {
     if (isProcessing) {
       const sent = send({ type: 'set-mode', payload: { mode: newMode === 'step' ? 'paused' : 'auto' } })
       if (!sent) {
-        alert('Failed to update mode: WebSocket is disconnected.')
+        setAppError('Failed to update mode: WebSocket is disconnected.')
       }
     }
   }, [isProcessing, send])
@@ -268,79 +268,81 @@ export default function App() {
           <span className="ws-status">{wsStatus}</span>
         </div>
       </header>
-      <main className="app-main" style={{ maxWidth: 'none', margin: '0', padding: '0', display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <main className="app-main">
         <div className={`app-layout ${showConsole ? 'with-sidebar' : 'no-sidebar'}`}>
           <div className="layout-left">
-            {appError && (
-              <div style={{
-                background: 'rgba(220,53,69,0.15)', border: '1px solid #dc3545',
-                borderRadius: 8, padding: '14px 18px', marginBottom: 16,
-                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12
-              }}>
-                <div style={{ flex: 1 }}>
-                  <strong style={{ color: '#ff6b6b', display: 'block', marginBottom: 6 }}>⚠️ Processing Error</strong>
-                  <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#e0e0e0', userSelect: 'text' }}>{appError}</pre>
+            <div className="layout-left-content">
+              {appError && (
+                <div style={{
+                  background: 'rgba(220,53,69,0.15)', border: '1px solid #dc3545',
+                  borderRadius: 8, padding: '14px 18px', marginBottom: 16,
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ color: '#ff6b6b', display: 'block', marginBottom: 6 }}>⚠️ Processing Error</strong>
+                    <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#e0e0e0', userSelect: 'text' }}>{appError}</pre>
+                  </div>
+                  <button onClick={() => setAppError(null)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0 }}>✕</button>
                 </div>
-                <button onClick={() => setAppError(null)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0 }}>✕</button>
-              </div>
-            )}
+              )}
 
-            {!currentSessionDir && invoices.length === 0 && (
-              <ResumePanel onResume={handleResume} />
-            )}
-            
-            <DropZone onFilesUploaded={handleFilesUploaded} disabled={isProcessing} />
-            
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginTop: 12 }}>
-              {!isProcessing ? (
-                <>
-                  <button 
-                    className="btn-primary" 
-                    onClick={() => handleStartProcessing(processingMode)}
-                    disabled={invoices.length === 0}
-                  >
-                    🚀 Start Processing
-                  </button>
-                  {invoices.some(i => i.status === 'skipped') && (
+              {!currentSessionDir && invoices.length === 0 && (
+                <ResumePanel onResume={handleResume} />
+              )}
+              
+              <DropZone onFilesUploaded={handleFilesUploaded} onError={setAppError} disabled={isProcessing} />
+              
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginTop: 12 }}>
+                {!isProcessing ? (
+                  <>
+                    <button 
+                      className="btn-primary" 
+                      onClick={() => handleStartProcessing(processingMode)}
+                      disabled={invoices.length === 0}
+                    >
+                      🚀 Start Processing
+                    </button>
+                    {invoices.some(i => i.status === 'skipped') && (
+                      <button 
+                        className="btn-secondary" 
+                        onClick={() => send({ type: 'reset-skipped', payload: { sessionDir: currentSessionDir } })}
+                      >
+                        🔄 Reset Skipped to Pending
+                      </button>
+                    )}
+                    <ModeToggle 
+                      mode={processingMode} 
+                      onChange={handleModeChange} 
+                      disabled={invoices.length === 0} 
+                    />
                     <button 
                       className="btn-secondary" 
-                      onClick={() => send({ type: 'reset-skipped', payload: { sessionDir: currentSessionDir } })}
+                      onClick={() => setShowManualForm(true)}
                     >
-                      🔄 Reset Skipped to Pending
+                      + Add Invoice Manually
                     </button>
-                  )}
-                  <ModeToggle 
-                    mode={processingMode} 
-                    onChange={handleModeChange} 
-                    disabled={invoices.length === 0} 
-                  />
-                  <button 
-                    className="btn-secondary" 
-                    onClick={() => setShowManualForm(true)}
-                  >
-                    + Add Invoice Manually
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className="btn-stop" onClick={handleStopProcessing}>
-                    🛑 Stop
-                  </button>
-                  <ModeToggle 
-                    mode={processingMode} 
-                    onChange={handleModeChange} 
-                    disabled={false} 
-                  />
-                </>
-              )}
+                  </>
+                ) : (
+                  <>
+                    <button className="btn-stop" onClick={handleStopProcessing}>
+                      🛑 Stop
+                    </button>
+                    <ModeToggle 
+                      mode={processingMode} 
+                      onChange={handleModeChange} 
+                      disabled={false} 
+                    />
+                  </>
+                )}
+              </div>
+
+              <StepButton visible={isProcessing && isStepWaiting} onStep={handleAdvanceStep} />
+              <ProgressBar invoices={invoices} />
+
+              <ErrorBanner error={processingError} onRetry={handleRetry} onSkip={handleErrorSkip} />
+              <InvoiceQueue invoices={invoices} />
+              <DownloadButtons pdfUrl={downloadUrls.pdfUrl} xlsxUrl={downloadUrls.xlsxUrl} />
             </div>
-
-            <StepButton visible={isProcessing && isStepWaiting} onStep={handleAdvanceStep} />
-            <ProgressBar invoices={invoices} />
-
-            <ErrorBanner error={processingError} onRetry={handleRetry} onSkip={handleErrorSkip} />
-            <InvoiceQueue invoices={invoices} />
-            <DownloadButtons pdfUrl={downloadUrls.pdfUrl} xlsxUrl={downloadUrls.xlsxUrl} />
 
             {showManualForm && (
               <ManualEntryForm

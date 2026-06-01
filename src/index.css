@@ -148,16 +148,15 @@ body {
 .invoice-status { font-size: 0.85rem; font-weight: 500; white-space: nowrap; }
 
 .app-main {
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  padding-right: 8px;
+  overflow: hidden;
 }
 
 /* Custom scrollbar properties for flex container scrolling */
@@ -298,12 +297,19 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden; /* Bounded view so absolute overlays center in visible area */
+  transition: all 0.3s ease;
+  position: relative; /* Position context for localized overlays */
+}
+.layout-left-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   min-height: 0;
   overflow-y: auto;
   padding-right: 8px;
-  transition: all 0.3s ease;
-  position: relative; /* Position context for localized overlays */
 }
 .layout-right {
   width: 360px;

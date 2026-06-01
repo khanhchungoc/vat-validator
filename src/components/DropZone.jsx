@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 
-export default function DropZone({ onFilesUploaded, disabled }) {
+export default function DropZone({ onFilesUploaded, onError, disabled }) {
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef()
@@ -27,7 +27,11 @@ export default function DropZone({ onFilesUploaded, disabled }) {
       onFilesUploaded(data.results)
     } catch (e) {
       console.error('Upload failed:', e)
-      alert(`Failed to upload invoices: ${e.message}`)
+      if (onError) {
+        onError(`Failed to upload invoices: ${e.message}`)
+      } else {
+        alert(`Failed to upload invoices: ${e.message}`)
+      }
     } finally {
       setUploading(false)
     }
