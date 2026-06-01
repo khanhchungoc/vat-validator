@@ -98,8 +98,14 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
           // Clear and focus GDT's taxpayer input field
           await page.fill('input#captcha', '')
           await page.focus('input#captcha')
-          // Simulate human typing
-          await page.keyboard.type(electronAnswer, { delay: 80 })
+          // Simulate human typing with character-by-character randomized delays (50ms to 150ms)
+          for (const char of electronAnswer) {
+            const delay = Math.floor(Math.random() * (150 - 50 + 1)) + 50
+            await page.keyboard.type(char, { delay })
+          }
+          // Human muscle transition delay (500ms)
+          await page.waitForTimeout(500)
+          
           // Click GDT's submit button natively inside GDT's form context.
           // This avoids matching global page header links (like the "Tra cứu" tab menu item) and triggers the exact onclick validators.
           const submitted = await page.evaluate(() => {
@@ -107,20 +113,31 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
             if (form) {
               const btn = form.querySelector('.subBtn') || form.querySelector('input[type="submit"]') || form.querySelector('button')
               if (btn) {
-                btn.click()
-                return true
-              } else {
-                form.submit()
-                return true
+                // Focus the submit button first
+                btn.focus()
+                return btn
               }
             }
-            return false
-          }).catch(() => false)
+            return null
+          }).catch(() => null)
 
-          if (!submitted) {
+          if (submitted) {
+            // Find and natively hover/click the active form's submit button to trigger coordinates and isTrusted=true event headers
+            const submitBtn = page.locator('form[name="fTcnnt"] .subBtn')
+              .or(page.locator('form[name="fTcnnt"] input[type="submit"]'))
+              .or(page.locator('form .subBtn'))
+              .or(page.locator('form input[type="submit"]'))
+              .first()
+
+            await submitBtn.hover().catch(() => {})
+            await page.waitForTimeout(200) // Small click action delay
+            await submitBtn.click()
+          } else {
             // Fallback: Use standard Playwright click
             const fallbackBtn = page.locator('input.subBtn, .subBtn, input[type="submit"]').first()
             if (await fallbackBtn.isVisible().catch(() => false)) {
+              await fallbackBtn.hover().catch(() => {})
+              await page.waitForTimeout(200)
               await fallbackBtn.click()
             } else {
               await page.keyboard.press('Enter')

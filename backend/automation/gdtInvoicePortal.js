@@ -178,9 +178,14 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
           // Clear and focus GDT's input field
           await page.fill('input#cvalue', '')
           await page.focus('input#cvalue')
-          // Simulate human typing to satisfy React/AntD state listeners
-          await page.keyboard.type(electronAnswer, { delay: 80 })
-          // Submit the form
+          // Simulate human typing with character-by-character randomized delays (50ms to 150ms)
+          for (const char of electronAnswer) {
+            const delay = Math.floor(Math.random() * (150 - 50 + 1)) + 50
+            await page.keyboard.type(char, { delay })
+          }
+          // Human muscle transition delay before hitting enter (500ms)
+          await page.waitForTimeout(500)
+          // Press Enter to submit GDT's form
           await page.keyboard.press('Enter')
           // Wait for response to finish
           return await responsePromise
