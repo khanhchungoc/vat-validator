@@ -32,7 +32,7 @@ function showErrorWindow(err) {
   const win = new BrowserWindow({
     width: 680,
     height: 420,
-    title: 'VATOCR — Startup Error',
+    title: 'VAT-validator — Startup Error',
     resizable: true,
     webPreferences: { nodeIntegration: false, contextIsolation: true }
   })
@@ -47,7 +47,7 @@ function startBackend(port) {
     process.env.BACKEND_PORT = String(port)
     if (!isDev) {
       process.env.NODE_ENV = 'production'
-      process.env.OUTPUT_DIR = path.join(app.getPath('documents'), 'VATOCR', 'output')
+      process.env.OUTPUT_DIR = path.join(app.getPath('documents'), 'VAT-validator', 'output')
       // Tell Playwright where to find its Chromium browser in the packaged app.
       // Uses os.homedir() for reliability across all Windows configurations.
       if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
@@ -69,7 +69,7 @@ function createWindow(port) {
     height: 800,
     minWidth: 960,
     minHeight: 600,
-    title: 'VATOCR — VAT Invoice Validator',
+    title: 'VAT-validator — VAT Invoice Validator',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true

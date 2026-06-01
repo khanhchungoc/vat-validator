@@ -1,5 +1,5 @@
 {
-  "name": "vatocr",
+  "name": "vat-validator",
   "version": "1.0.0",
   "description": "VAT Invoice Validation Desktop App",
   "main": "electron/main.js",
@@ -36,8 +36,8 @@
     "wait-on": "^9.0.10"
   },
   "build": {
-    "appId": "com.vatocr.app",
-    "productName": "VATOCR",
+    "appId": "com.vatvalidator.app",
+    "productName": "VAT-validator",
     "copyright": "Copyright © 2026",
     "forceCodeSigning": false,
     "directories": {

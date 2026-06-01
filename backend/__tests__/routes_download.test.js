@@ -61,7 +61,7 @@ describe('Download Routes Logic', () => {
       expect(fs.existsSync).toHaveBeenCalledWith(expectedPath)
       expect(res.download).toHaveBeenCalledWith(
         expectedPath,
-        'vatocr-results-test-session-123.pdf'
+        'vat-validator-results-test-session-123.pdf'
       )
       expect(res.status).not.toHaveBeenCalled()
     })
@@ -110,7 +110,7 @@ describe('Download Routes Logic', () => {
       expect(fs.existsSync).toHaveBeenCalledWith(expectedPath)
       expect(res.download).toHaveBeenCalledWith(
         expectedPath,
-        'vatocr-summary-test-session-456.xlsx'
+        'vat-validator-summary-test-session-456.xlsx'
       )
       expect(res.status).not.toHaveBeenCalled()
     })

@@ -17,7 +17,7 @@ router.get('/pdf/:sessionId', (req, res) => {
   }
   const filePath = path.join(OUTPUT_DIR, sessionId, 'results.pdf')
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'PDF not found' })
-  res.download(filePath, `vatocr-results-${sessionId}.pdf`)
+  res.download(filePath, `vat-validator-results-${sessionId}.pdf`)
 })
 
 router.get('/xlsx/:sessionId', (req, res) => {
@@ -27,7 +27,7 @@ router.get('/xlsx/:sessionId', (req, res) => {
   }
   const filePath = path.join(OUTPUT_DIR, sessionId, 'summary.xlsx')
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'XLSX not found' })
-  res.download(filePath, `vatocr-summary-${sessionId}.xlsx`)
+  res.download(filePath, `vat-validator-summary-${sessionId}.xlsx`)
 })
 
 module.exports = router
