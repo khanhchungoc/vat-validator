@@ -85,7 +85,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     await page.focus(inputSelector)
     await page.keyboard.press('Control+A')
     await page.keyboard.press('Backspace')
-    await page.type(inputSelector, answer.trim().toUpperCase(), { delay: 100 })
+    await page.type(inputSelector, answer.trim(), { delay: 100 })
 
     await page.click('input.subBtn, .subBtn, button[type="submit"], input[type="submit"], a:has-text("Tìm kiếm")')
 
