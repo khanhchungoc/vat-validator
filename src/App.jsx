@@ -10,7 +10,7 @@ function getApiBase() {
 import DropZone from './components/DropZone'
 import ManualEntryForm from './components/ManualEntryForm'
 import InvoiceQueue from './components/InvoiceQueue'
-import CaptchaModal from './components/CaptchaModal'
+import CaptchaModal from './components/CaptchaModal' // Native CAPTCHA Solve Modal
 import ResumePanel from './components/ResumePanel'
 import DownloadButtons from './components/DownloadButtons'
 import DuplicateWarning from './components/DuplicateWarning'
