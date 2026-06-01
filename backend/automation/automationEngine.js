@@ -78,7 +78,10 @@ async function startProcessing(sessionDir, mode = 'auto') {
   broadcast({ type: 'processing-log-clear' })
 
   try {
-    browser = await chromium.launch({ headless: false })
+    browser = await chromium.launch({ 
+      headless: false,
+      args: ['--start-minimized']
+    })
     const page = await browser.newPage()
     await page.setViewportSize({ width: 1280, height: 900 })
 
