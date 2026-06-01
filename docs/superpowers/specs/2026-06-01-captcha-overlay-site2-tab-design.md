@@ -1,11 +1,11 @@
-# Design Specification: Localized Captcha Overlay & Site 2 Tab Selection
+# Design Specification: Localized Captcha Overlay & Site 2 Verification Flow
 
-This specification defines the changes required to overlay the CAPTCHA modal only on the left column (preserving the right-hand live activity log's visibility) and ensuring Site 2 selects the correct taxpayer info tab and inputs the Seller Tax ID accurately.
+This specification defines the changes required to overlay the CAPTCHA modal only on the left column (preserving the right-hand live activity log's visibility) and validates the taxpayer search flow on Site 2.
 
 ## Goals
 - Localize overlay modals (such as `CaptchaModal` and other overlays) to the primary left column `.layout-left` by making the left column relative and the overlay absolute.
 - Keep the right-hand Live Console fully visible and active while the user inputs CAPTCHAs.
-- Explicitly click and select the "Thông tin về người nộp thuế" (Taxpayer Information) tab on Site 2 before filling the Seller Tax ID.
+- Verify that on Site 2, the Tax ID (Mã số thuế) is successfully entered into the first field *before* entering the CAPTCHA interaction loop. No explicit tab click is needed as `/tcnnt/mstdn.jsp` is already the correct default tab.
 
 ## Detailed Changes
 
@@ -17,28 +17,10 @@ This specification defines the changes required to overlay the CAPTCHA modal onl
 - Add `border-radius: var(--radius);` to `.modal-overlay` so the overlay fits the glassmorphic rounded corners of the main container perfectly.
 
 #### `src/App.jsx`
-- Move all overlay components (`ManualEntryForm`, `CaptchaModal`, `DuplicateWarning`) from the root level of the render tree inside `.layout-left`.
+- Move all overlay components (`ManualEntryForm`, `CaptchaModal`, `DuplicateWarning`) from the root level of the render tree inside `.layout-left` (right after `DownloadButtons`).
 
----
-
-### 2. Site 2 Tab Selection & Logging
-
-#### `backend/automation/site2.js`
-- Select the tab `"Thông tin về người nộp thuế"` explicitly before proceeding:
-  ```javascript
-  // Explicitly choose the "Thông tin về người nộp thuế" tab
-  try {
-    const tab = await page.$('a:has-text("Thông tin về người nộp thuế")')
-    if (tab) {
-      onLog('Selecting tab "Thông tin về người nộp thuế"...')
-      await tab.click()
-      await page.waitForTimeout(500)
-    }
-  } catch (err) {
-    // Ignore if tab click fails
-  }
-  ```
-- Print a clear log statement indicating that the Seller Tax ID (stripped of branch suffix) is being filled into the first visible field.
+### 2. Site 2 Field Verification
+- No code changes are required for `backend/automation/site2.js` for tab click since `mstdn.jsp` loads the correct tab. We verify that the Tax ID field `input[name="mst"]` is filled at the very top of `runSite2`, prior to entering the `while(true)` CAPTCHA loop.
 
 ---
 
@@ -49,10 +31,6 @@ This specification defines the changes required to overlay the CAPTCHA modal onl
 2. Verify that when the CAPTCHA modal appears:
    - It dims and overlays *only* the left column of the dashboard.
    - The right-hand Live Console is completely bright, legible, and scrolling real-time steps dynamically.
-3. During Site 2 lookup, check the Live Console log steps. Verify:
-   - It outputs: `[Site 2] Selecting tab "Thông tin về người nộp thuế"...`
-   - It outputs: `[Site 2] Entering Seller Tax ID (XXXXXXXXXX) into the first field...`
-   - Playwright correctly navigates the GDT page and selects the tab before typing the tax ID.
 
 ### Automated Tests
 Run `npm test` to verify zero regressions.
