@@ -93,9 +93,10 @@ body {
 }
 
 .modal-overlay {
-  position: fixed; inset: 0;
+  position: absolute; inset: 0; /* Confine to parent layout-left */
   background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center; z-index: 100;
+  border-radius: var(--radius); /* Clean rounded border matching parent */
 }
 .modal {
   background: linear-gradient(135deg, #1e293b, #0f172a);
@@ -302,6 +303,7 @@ body {
   overflow-y: auto;
   padding-right: 8px;
   transition: all 0.3s ease;
+  position: relative; /* Position context for localized overlays */
 }
 .layout-right {
   width: 360px;

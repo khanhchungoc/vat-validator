@@ -341,6 +341,28 @@ export default function App() {
             <ErrorBanner error={processingError} onRetry={handleRetry} onSkip={handleErrorSkip} />
             <InvoiceQueue invoices={invoices} />
             <DownloadButtons pdfUrl={downloadUrls.pdfUrl} xlsxUrl={downloadUrls.xlsxUrl} />
+
+            {showManualForm && (
+              <ManualEntryForm
+                onSubmit={handleManualSubmit}
+                onClose={() => setShowManualForm(false)}
+              />
+            )}
+            {captchaData && (
+              <CaptchaModal
+                imageBase64={captchaData.image}
+                attempt={captchaData.attempt}
+                onSubmit={handleCaptchaSubmit}
+                onSkip={handleSkipInvoice}
+              />
+            )}
+            {showDuplicateWarning && (
+              <DuplicateWarning
+                duplicates={duplicates}
+                onRemove={handleRemoveDuplicates}
+                onProceed={handleProceedWithDuplicates}
+              />
+            )}
           </div>
 
           <div className="layout-right">
@@ -352,27 +374,6 @@ export default function App() {
           </div>
         </div>
       </main>
-      {showManualForm && (
-        <ManualEntryForm
-          onSubmit={handleManualSubmit}
-          onClose={() => setShowManualForm(false)}
-        />
-      )}
-      {captchaData && (
-        <CaptchaModal
-          imageBase64={captchaData.image}
-          attempt={captchaData.attempt}
-          onSubmit={handleCaptchaSubmit}
-          onSkip={handleSkipInvoice}
-        />
-      )}
-      {showDuplicateWarning && (
-        <DuplicateWarning
-          duplicates={duplicates}
-          onRemove={handleRemoveDuplicates}
-          onProceed={handleProceedWithDuplicates}
-        />
-      )}
     </div>
   )
 }
