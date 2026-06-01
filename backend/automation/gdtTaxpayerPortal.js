@@ -17,11 +17,6 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     onLog('Already on Taxpayer Portal. Resetting form fields for new query...')
     
     // Save current captcha src before refresh so we can wait for the change
-    const oldSrc = await page.evaluate(() => {
-      const img = document.querySelector('img[src*="captcha"]')
-      return img ? img.getAttribute('src') : null
-    })
-
     // Clear fields
     await page.fill('input[name="mst"], input[id*="mst"], input[placeholder*="mã số thuế"]', '')
     await page.fill('input#captcha, input[name="captcha"]', '')
@@ -30,15 +25,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     const captchaImg = await page.$('img[src*="captcha"]')
     if (captchaImg) {
       await captchaImg.click()
-      // Wait for captcha src to update
-      await page.waitForFunction(
-        (prevSrc) => {
-          const img = document.querySelector('img[src*="captcha"]')
-          return img && img.getAttribute('src') !== prevSrc
-        },
-        oldSrc,
-        { timeout: 10000 }
-      ).catch(() => {})
+      await page.waitForTimeout(1000)
     }
   }
 
@@ -74,12 +61,6 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
 
     onLog(`Submitting CAPTCHA answer: "${answer}"...`)
 
-    // Save current CAPTCHA src before submitting so we can detect when it updates on retry
-    const oldCaptchaSrc = await page.evaluate(() => {
-      const img = document.querySelector('img[src*="captcha"]')
-      return img ? img.getAttribute('src') : null
-    })
-
     // Fill and submit CAPTCHA with event-driven typing
     const inputSelector = 'input#captcha, input[name="captcha"]'
     await page.focus(inputSelector)
@@ -100,23 +81,9 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     const hasWrongCaptcha = await page.$('text=Vui lòng nhập đúng mã xác nhận')
     if (hasWrongCaptcha && await hasWrongCaptcha.isVisible()) {
       onLog('GDT returned "Vui lòng nhập đúng mã xác nhận!" (Incorrect CAPTCHA). Refreshing and retrying...')
-
-      // Force a manual CAPTCHA image click to trigger refresh
-      const captchaImg = await page.$('img[src*="captcha"]')
-      if (captchaImg) {
-        await captchaImg.click()
-      }
-
-      // Wait for captcha src to actually change to prevent screenshotting the old CAPTCHA
-      await page.waitForFunction(
-        (prevSrc) => {
-          const img = document.querySelector('img[src*="captcha"]')
-          return img && img.getAttribute('src') !== prevSrc
-        },
-        oldCaptchaSrc,
-        { timeout: 5000 }
-      ).catch(() => {})
-
+      // GDT reloads the page on incorrect CAPTCHA, so the new CAPTCHA is already loaded.
+      // We just wait 500ms for the browser to render it, then continue.
+      await page.waitForTimeout(500)
       continue
     }
 
@@ -144,16 +111,8 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
       const captchaImg = await page.$('img[src*="captcha"]')
       if (captchaImg) {
         await captchaImg.click()
+        await page.waitForTimeout(1000)
       }
-
-      await page.waitForFunction(
-        (prevSrc) => {
-          const img = document.querySelector('img[src*="captcha"]')
-          return img && img.getAttribute('src') !== prevSrc
-        },
-        oldCaptchaSrc,
-        { timeout: 5000 }
-      ).catch(() => {})
 
       continue
     }
