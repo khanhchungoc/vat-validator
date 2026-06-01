@@ -100,20 +100,31 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
           await page.focus('input#captcha')
           // Simulate human typing
           await page.keyboard.type(electronAnswer, { delay: 80 })
-          // Locate GDT's submit button using standard Playwright locator or chain
-          const submitBtn = page.locator('input.subBtn')
-            .or(page.locator('.subBtn'))
-            .or(page.locator('input[type="submit"]'))
-            .or(page.locator('button[type="submit"]'))
-            .or(page.locator('text=Tra cứu'))
-            .or(page.locator('text=Tìm kiếm'))
-            .first()
+          // Click GDT's submit button natively inside GDT's form context.
+          // This avoids matching global page header links (like the "Tra cứu" tab menu item) and triggers the exact onclick validators.
+          const submitted = await page.evaluate(() => {
+            const form = document.querySelector('form[name="fTcnnt"]') || document.forms[0]
+            if (form) {
+              const btn = form.querySelector('.subBtn') || form.querySelector('input[type="submit"]') || form.querySelector('button')
+              if (btn) {
+                btn.click()
+                return true
+              } else {
+                form.submit()
+                return true
+              }
+            }
+            return false
+          }).catch(() => false)
 
-          if (await submitBtn.isVisible().catch(() => false)) {
-            await submitBtn.click()
-          } else {
-            // Fallback: Press Enter
-            await page.keyboard.press('Enter')
+          if (!submitted) {
+            // Fallback: Use standard Playwright click
+            const fallbackBtn = page.locator('input.subBtn, .subBtn, input[type="submit"]').first()
+            if (await fallbackBtn.isVisible().catch(() => false)) {
+              await fallbackBtn.click()
+            } else {
+              await page.keyboard.press('Enter')
+            }
           }
           // Wait for navigation to complete
           await navigationPromise
