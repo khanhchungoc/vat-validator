@@ -178,7 +178,8 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     const hasSuccessTable = await page.$('text=BẢNG THÔNG TIN TRA CỨU')
     if (hasSuccessTable && await hasSuccessTable.isVisible()) {
       onLog('Verification successful! Capturing business status screenshot...')
-      const screenshotBuffer = await page.screenshot({ fullPage: false })
+      // Capture the full scrollable page to include all businesses if multiple are returned
+      const screenshotBuffer = await page.screenshot({ fullPage: true })
       const screenshotBase64 = screenshotBuffer.toString('base64')
       return { ok: true, screenshotBase64, status: 'pass' }
     }
