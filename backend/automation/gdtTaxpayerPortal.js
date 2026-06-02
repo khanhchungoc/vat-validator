@@ -126,11 +126,11 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
               if (btn) {
                 // Focus the submit button first
                 btn.focus()
-                return btn
+                return true
               }
             }
-            return null
-          }).catch(() => null)
+            return false
+          }).catch(() => false)
 
           if (submitted) {
             // Find and natively hover/click the active form's submit button to trigger coordinates and isTrusted=true event headers
