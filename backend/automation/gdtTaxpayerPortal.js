@@ -3,6 +3,8 @@ const JITTER_FACTOR = 0.07
 
 /**
  * Generate a randomized delay with ±7% dynamic timing jitter to bypass bot heuristics.
+ * @param {number} baseMs - The base delay in milliseconds
+ * @returns {number} The randomized delay
  */
 function getRandomDelay(baseMs) {
   const jitter = Math.round(baseMs * JITTER_FACTOR) // 7% dynamic jitter
