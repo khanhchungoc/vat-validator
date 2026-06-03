@@ -286,15 +286,15 @@ export default function App() {
             <div className="layout-left-content">
               {appError && (
                 <div style={{
-                  background: 'rgba(220,53,69,0.15)', border: '1px solid #dc3545',
+                  background: '#fef2f2', border: '1px solid var(--fail)',
                   borderRadius: 8, padding: '14px 18px', marginBottom: 16,
                   display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12
                 }}>
                   <div style={{ flex: 1 }}>
-                    <strong style={{ color: '#ff6b6b', display: 'block', marginBottom: 6 }}>⚠️ Processing Error</strong>
-                    <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#e0e0e0', userSelect: 'text' }}>{appError}</pre>
+                    <strong style={{ color: 'var(--fail)', display: 'block', marginBottom: 6 }}>⚠️ Processing Error</strong>
+                    <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--text-main)', userSelect: 'text' }}>{appError}</pre>
                   </div>
-                  <button onClick={() => setAppError(null)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0 }}>✕</button>
+                  <button onClick={() => setAppError(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0 }}>✕</button>
                 </div>
               )}
 
