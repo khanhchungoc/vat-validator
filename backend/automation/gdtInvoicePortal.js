@@ -48,6 +48,11 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
     onLog('Navigating to GDT Portal (https://hoadondientu.gdt.gov.vn/)...')
     await page.goto(SITE1_URL, { waitUntil: 'networkidle', timeout: 30000 })
 
+    const loaded = await verifySiteLoaded(page, SITE1_URL, 'input#nbmst', 3, onLog)
+    if (!loaded) {
+      throw new Error('GDT Invoice Portal failed to load successfully after 3 attempts.')
+    }
+
     // Close the annoying "CỤC THUẾ THÔNG BÁO" modal if it pops up and blocks the screen
     try {
       const closeBtn = await page.$('.ant-modal-close')
