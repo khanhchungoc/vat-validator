@@ -74,7 +74,7 @@
 **Files:**
 - Modify: `src/App.jsx:287-299`
 
-- [ ] **Step 1: Replace dark text color values with high-contrast slate colors**
+- [x] **Step 1: Replace dark text color values with high-contrast slate colors**
   Modify `src/App.jsx` to update the error banner inline styles.
 
   Find target content (lines 287-299):
@@ -111,13 +111,13 @@
                 )}
   ```
 
-- [ ] **Step 2: Run build to ensure successful compilation**
+- [x] **Step 2: Run build to ensure successful compilation**
   Run: `npm run build`
   Expected: Success.
 
-- [ ] **Step 3: Run Jest tests to ensure regression-free build**
+- [x] **Step 3: Run Jest tests to ensure regression-free build**
   Run: `npm test`
   Expected: All 52 tests pass.
 
-- [ ] **Step 4: Commit Task 2 changes**
+- [x] **Step 4: Commit Task 2 changes**
   Run: `git add src/App.jsx; git commit -m "feat(ui): fix error banner contrast in light theme"`
