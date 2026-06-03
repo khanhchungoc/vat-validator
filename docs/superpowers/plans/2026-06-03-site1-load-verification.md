@@ -139,7 +139,7 @@
 **Files:**
 - Modify: `backend/automation/gdtInvoicePortal.js`
 
-- [ ] **Step 1: Call `verifySiteLoaded` after navigating to SITE1_URL**
+- [x] **Step 1: Call `verifySiteLoaded` after navigating to SITE1_URL**
   Modify `backend/automation/gdtInvoicePortal.js` inside `runGdtInvoicePortal` right after `await page.goto(...)`:
 
   Find target content (lines 28-30):
@@ -159,9 +159,9 @@
       }
   ```
 
-- [ ] **Step 2: Run all backend tests to ensure regression-free codebase**
+- [x] **Step 2: Run all backend tests to ensure regression-free codebase**
   Run: `npm test`
   Expected: PASS for all tests (including any routing, engine sessions, and download tests).
 
-- [ ] **Step 3: Commit integration changes**
+- [x] **Step 3: Commit integration changes**
   Run: `git add backend/automation/gdtInvoicePortal.js; git commit -m "feat(automation): integrate GDT Portal load verification check"`
