@@ -16,7 +16,7 @@
 - Create: `backend/__tests__/gdtInvoicePortal.test.js`
 - Modify: `backend/automation/gdtInvoicePortal.js`
 
-- [ ] **Step 1: Create the test file with failing unit tests**
+- [x] **Step 1: Create the test file with failing unit tests**
   Create `backend/__tests__/gdtInvoicePortal.test.js` with tests that mock Playwright's `page.waitForSelector` and `page.goto` to verify the three scenarios for `verifySiteLoaded`:
   1. Successful load on the first attempt.
   2. Load fails on the first attempt, but succeeds on the second attempt after a reload.
@@ -76,11 +76,11 @@
   })
   ```
 
-- [ ] **Step 2: Run test suite to verify tests compile but fail**
+- [x] **Step 2: Run test suite to verify tests compile but fail**
   Run: `npm test backend/__tests__/gdtInvoicePortal.test.js`
   Expected: Failure (module.exports from `gdtInvoicePortal.js` does not have `verifySiteLoaded` exported yet).
 
-- [ ] **Step 3: Define stub for `verifySiteLoaded` and export it**
+- [x] **Step 3: Define stub for `verifySiteLoaded` and export it**
   Modify `backend/automation/gdtInvoicePortal.js` to define and export `verifySiteLoaded`.
   
   Add definition (around line 17 before `runGdtInvoicePortal`):
@@ -95,11 +95,11 @@
   module.exports = { runGdtInvoicePortal, verifySiteLoaded }
   ```
 
-- [ ] **Step 4: Run test to make sure it fails cleanly on assertions**
+- [x] **Step 4: Run test to make sure it fails cleanly on assertions**
   Run: `npm test backend/__tests__/gdtInvoicePortal.test.js`
   Expected: FAIL on the success assertions (since `verifySiteLoaded` returns `false`).
 
-- [ ] **Step 5: Write the full implementation of `verifySiteLoaded`**
+- [x] **Step 5: Write the full implementation of `verifySiteLoaded`**
   Modify `backend/automation/gdtInvoicePortal.js`:
   Replace the stub with the full implementation:
   ```javascript
@@ -125,11 +125,11 @@
   }
   ```
 
-- [ ] **Step 6: Run tests to verify all pass**
+- [x] **Step 6: Run tests to verify all pass**
   Run: `npm test backend/__tests__/gdtInvoicePortal.test.js`
   Expected: PASS
 
-- [ ] **Step 7: Commit the unit tests and the helper function**
+- [x] **Step 7: Commit the unit tests and the helper function**
   Run: `git add backend/__tests__/gdtInvoicePortal.test.js backend/automation/gdtInvoicePortal.js; git commit -m "feat(automation): add verifySiteLoaded helper and tests"`
 
 ---
