@@ -14,6 +14,26 @@ function getRandomDelay(baseMs) {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
+async function verifySiteLoaded(page, url, selector, maxAttempts = 3, onLog = () => {}) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      if (attempt > 1) {
+        onLog(`Site load check failed. Reloading GDT Portal page (attempt ${attempt}/${maxAttempts})...`)
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })
+      } else {
+        onLog(`Verifying GDT Portal loaded successfully...`)
+      }
+      
+      // Wait for the key input element to be visible
+      await page.waitForSelector(selector, { state: 'visible', timeout: 10000 })
+      onLog('GDT Portal loaded successfully!')
+      return true
+    } catch (err) {
+      onLog(`Site load check failed on attempt ${attempt}: ${err.message}`)
+    }
+  }
+  return false
+}
 
 /**
  * Run GDT Invoice Portal lookup for a single invoice.
@@ -297,4 +317,4 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
   return { ok: true, screenshotBase64, status }
 }
 
-module.exports = { runGdtInvoicePortal }
+module.exports = { runGdtInvoicePortal, verifySiteLoaded }
