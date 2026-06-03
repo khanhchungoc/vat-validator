@@ -15,7 +15,7 @@
 **Files:**
 - Modify: `src/components/CaptchaModal.jsx:38-75`
 
-- [ ] **Step 1: Replace glass border and background custom properties with light-theme vars**
+- [x] **Step 1: Replace glass border and background custom properties with light-theme vars**
   Modify `src/components/CaptchaModal.jsx` to update the modal styling, replacing obsolete `--glass-border` and translucent white styles.
 
   Find target content (lines 38-42):
@@ -64,7 +64,7 @@
                 }}
   ```
 
-- [ ] **Step 2: Commit Task 1 changes**
+- [x] **Step 2: Commit Task 1 changes**
   Run: `git add src/components/CaptchaModal.jsx; git commit -m "feat(ui): fix CAPTCHA modal visibility in light theme"`
 
 ---
