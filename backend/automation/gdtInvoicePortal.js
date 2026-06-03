@@ -44,7 +44,13 @@ async function verifySiteLoaded(page, url, selector, maxAttempts = 3, onLog = ()
  */
 async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
   const currentUrl = page.url()
-  if (!currentUrl.includes('hoadondientu.gdt.gov.vn')) {
+  const isGdtUrl = currentUrl.includes('hoadondientu.gdt.gov.vn')
+  let isLoaded = false
+  if (isGdtUrl) {
+    isLoaded = await page.locator('input#nbmst').isVisible().catch(() => false)
+  }
+
+  if (!isGdtUrl || !isLoaded) {
     onLog('Navigating to GDT Portal (https://hoadondientu.gdt.gov.vn/)...')
     await page.goto(SITE1_URL, { waitUntil: 'networkidle', timeout: 30000 })
 
