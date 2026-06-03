@@ -35,7 +35,7 @@ export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip })
           </p>
         )}
         
-        <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--glass-border)', display: 'inline-block', marginBottom: 24 }}>
+        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid var(--panel-border)', display: 'inline-block', marginBottom: 24 }}>
           <img
             src={`data:image/png;base64,${imageBase64}`}
             alt="CAPTCHA Hint"
@@ -62,8 +62,8 @@ export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip })
                 flex: 1,
                 padding: '10px 14px',
                 borderRadius: '8px',
-                border: '1px solid var(--glass-border)',
-                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid var(--panel-border)',
+                background: 'var(--panel-bg)',
                 color: 'var(--text-main)',
                 fontSize: '0.95rem',
                 outline: 'none'
