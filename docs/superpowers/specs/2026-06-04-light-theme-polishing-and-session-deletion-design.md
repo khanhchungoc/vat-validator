@@ -109,3 +109,8 @@ router.post('/delete', (req, res) => {
 #### 4. `src/components/ResumePanel.jsx`
 - Add API callback: `fetch('.../sessions/delete', { method: 'POST', body: { sessionDir } })`
 - Display a small red Delete button next to the Resume button.
+
+#### 5. `src/components/CaptchaModal.jsx` (CAPTCHA Image Scaling)
+- Scale up the CAPTCHA image inside the modal to make characters highly legible.
+- Set inline style `width: '240px'` and `height: 'auto'` on the `<img>` element. Use `image-rendering: 'pixelated'` or `image-rendering: 'crisp-edges'` if the upscaling causes excessive blur, but standard scaling should suffice.
+
