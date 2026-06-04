@@ -37,7 +37,7 @@ body {
 
 .app-header h1 {
   color: var(--accent);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .ws-status {
@@ -247,7 +247,7 @@ body {
   border-radius: var(--radius); padding: 16px 20px; margin: 16px 0;
 }
 .error-banner-content { display: flex; gap: 12px; align-items: flex-start; }
-.error-icon { font-size: 1.4rem; }
+.error-icon { font-size: 1.25rem; }
 .error-banner-content strong { display: block; margin-bottom: 4px; color: var(--fail); }
 .error-banner-content p { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
 .error-banner-actions { display: flex; gap: 10px; flex-shrink: 0; }
@@ -385,7 +385,7 @@ body {
   cursor: pointer;
   color: var(--text-main);
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 .console-header-btn:hover {
@@ -422,7 +422,7 @@ body {
   50% { opacity: 0.5; transform: scale(1.2); }
 }
 .console-chevron {
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   transition: transform 0.3s;
 }
@@ -458,7 +458,7 @@ body {
   height: 100%;
   font-style: italic;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 .console-lines {
   display: flex;
