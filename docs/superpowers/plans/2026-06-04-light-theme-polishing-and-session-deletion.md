@@ -15,7 +15,7 @@
 **Files:**
 - Modify: `src/index.css`
 
-- [ ] **Step 1: Update typography stack, weights, and console panel styles in `src/index.css`**
+- [x] **Step 1: Update typography stack, weights, and console panel styles in `src/index.css`**
   Modify `src/index.css` to unify font rules and shift the Live Activity Console to light mode.
 
   Update the `body` font stack on line 20:
@@ -164,7 +164,7 @@
   }
   ```
 
-- [ ] **Step 2: Commit Task 1 changes**
+- [x] **Step 2: Commit Task 1 changes**
   Run: `git add src/index.css; git commit -m "feat(ui): unify typography and make Live Console light themed"`
 
 ---
