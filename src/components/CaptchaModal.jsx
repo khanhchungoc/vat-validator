@@ -71,7 +71,8 @@ export default function CaptchaModal({ imageBase64, attempt, site, onSubmit, onS
                 background: 'var(--panel-bg)',
                 color: 'var(--text-main)',
                 fontSize: '0.95rem',
-                outline: 'none'
+                outline: 'none',
+                textTransform: site === 1 ? 'uppercase' : 'none'
               }}
             />
             <button
