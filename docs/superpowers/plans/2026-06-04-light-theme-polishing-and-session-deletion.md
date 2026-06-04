@@ -175,7 +175,7 @@
 - Modify: `src/App.jsx`
 - Modify: `src/components/CaptchaModal.jsx`
 
-- [ ] **Step 1: Refactor Error Banner pre element font in `src/App.jsx`**
+- [x] **Step 1: Refactor Error Banner pre element font in `src/App.jsx`**
   Modify `src/App.jsx` to explicitly inherit font-family in the error pre element, preventing browser monospace fallback (around line 295).
 
   Find:
@@ -188,7 +188,7 @@
   <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--text-main)', userSelect: 'text', fontFamily: 'inherit' }}>{appError}</pre>
   ```
 
-- [ ] **Step 2: Scale up CAPTCHA image in `src/components/CaptchaModal.jsx`**
+- [x] **Step 2: Scale up CAPTCHA image in `src/components/CaptchaModal.jsx`**
   Modify `src/components/CaptchaModal.jsx` to specify a larger size for the CAPTCHA image.
 
   Find:
@@ -227,7 +227,7 @@
           </div>
   ```
 
-- [ ] **Step 3: Commit Task 2 changes**
+- [x] **Step 3: Commit Task 2 changes**
   Run: `git add src/App.jsx src/components/CaptchaModal.jsx; git commit -m "feat(ui): inherit error font and scale up CAPTCHA modal image"`
 
 ---
