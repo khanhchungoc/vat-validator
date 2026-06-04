@@ -299,7 +299,9 @@ export default function App() {
               )}
 
               {!currentSessionDir && invoices.length === 0 && (
-                <ResumePanel onResume={handleResume} />
+                <ResumePanel onResume={handleResume} onDeleteSession={(dir) => {
+                  setCurrentSessionDir(null)
+                }} />
               )}
               
               <DropZone onFilesUploaded={handleFilesUploaded} onError={setAppError} disabled={isProcessing} />
