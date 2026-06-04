@@ -1,5 +1,5 @@
 const express = require('express')
-const { createSession, loadSession, listIncompleteSessions, OUTPUT_DIR, validateDir } = require('../sessionManager')
+const { createSession, loadSession, deleteSession, listIncompleteSessions, OUTPUT_DIR, validateDir } = require('../sessionManager')
 const { loadInvoices } = require('../invoiceStore')
 const { getIsRunning } = require('../automation/automationEngine')
 const path = require('path')
@@ -51,6 +51,23 @@ router.post('/resume', (req, res) => {
   loadInvoices(toResume)
 
   res.json({ session, invoices: toResume })
+})
+
+// POST /sessions/delete - delete a session folder
+router.post('/delete', (req, res) => {
+  const { sessionDir } = req.body
+  if (!sessionDir) return res.status(400).json({ error: 'sessionDir required' })
+
+  if (!validateDir(sessionDir)) {
+    return res.status(400).json({ error: 'Invalid session directory' })
+  }
+
+  const success = deleteSession(sessionDir)
+  if (!success) {
+    return res.status(500).json({ error: 'Failed to delete session' })
+  }
+
+  res.json({ ok: true })
 })
 
 module.exports = router

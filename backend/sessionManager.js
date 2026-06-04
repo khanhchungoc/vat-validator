@@ -108,4 +108,19 @@ function listIncompleteSessions() {
   }
 }
 
-module.exports = { createSession, saveSession, loadSession, listIncompleteSessions, OUTPUT_DIR, validateDir }
+function deleteSession(sessionDir) {
+  try {
+    if (!validateDir(sessionDir)) {
+      throw new Error(`Invalid session directory: ${sessionDir}`)
+    }
+    if (fs.existsSync(sessionDir)) {
+      fs.rmSync(sessionDir, { recursive: true, force: true })
+    }
+    return true
+  } catch (err) {
+    console.error('Failed to delete session:', err)
+    return false
+  }
+}
+
+module.exports = { createSession, saveSession, loadSession, deleteSession, listIncompleteSessions, OUTPUT_DIR, validateDir }

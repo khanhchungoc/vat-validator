@@ -2,7 +2,7 @@ const express = require('express')
 const sessionsRouter = require('../routes/sessions')
 const { getIsRunning } = require('../automation/automationEngine')
 const { clearInvoices, loadInvoices } = require('../invoiceStore')
-const { createSession, loadSession, listIncompleteSessions } = require('../sessionManager')
+const { createSession, loadSession, deleteSession, listIncompleteSessions } = require('../sessionManager')
 
 jest.mock('../automation/automationEngine', () => ({
   getIsRunning: jest.fn()
@@ -16,6 +16,7 @@ jest.mock('../invoiceStore', () => ({
 jest.mock('../sessionManager', () => ({
   createSession: jest.fn(),
   loadSession: jest.fn(),
+  deleteSession: jest.fn(),
   listIncompleteSessions: jest.fn(),
   OUTPUT_DIR: 'C:\\Users\\KhanhChuNgoc\\Documents\\Personal Projects\\VATOCR\\output',
   validateDir: jest.fn().mockImplementation((dir) => {
@@ -139,6 +140,38 @@ describe('Sessions Routes Logic', () => {
         { id: '2', status: 'pending' } // processing -> pending
       ])
       expect(res.json).toHaveBeenCalled()
+    })
+  })
+
+  describe('POST /delete', () => {
+    const handler = getHandler('POST', '/delete')
+    const validDir = 'C:\\Users\\KhanhChuNgoc\\Documents\\Personal Projects\\VATOCR\\output\\session1'
+
+    test('returns 400 if sessionDir is missing', () => {
+      handler(req, res)
+      expect(res.status).toHaveBeenCalledWith(400)
+      expect(res.json).toHaveBeenCalledWith({ error: 'sessionDir required' })
+    })
+
+    test('returns 400 if sessionDir is invalid', () => {
+      req.body.sessionDir = 'C:\\Users\\KhanhChuNgoc\\Documents\\Secret'
+      handler(req, res)
+      expect(res.status).toHaveBeenCalledWith(400)
+      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid session directory' })
+    })
+
+    test('returns 500 if deleteSession fails', () => {
+      req.body.sessionDir = validDir
+      deleteSession.mockReturnValue(false)
+      handler(req, res)
+      expect(res.status).toHaveBeenCalledWith(500)
+    })
+
+    test('returns 200/ok on success', () => {
+      req.body.sessionDir = validDir
+      deleteSession.mockReturnValue(true)
+      handler(req, res)
+      expect(res.json).toHaveBeenCalledWith({ ok: true })
     })
   })
 })

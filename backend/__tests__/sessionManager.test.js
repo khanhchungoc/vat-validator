@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const { createSession, saveSession, loadSession, listIncompleteSessions, OUTPUT_DIR } = require('../sessionManager')
+const { createSession, saveSession, loadSession, deleteSession, listIncompleteSessions, OUTPUT_DIR } = require('../sessionManager')
 
 describe('sessionManager', () => {
   beforeEach(() => {
@@ -60,6 +60,15 @@ describe('sessionManager', () => {
     expect(loaded.status).toBe('incomplete')
 
     expect(loadSession('non-existent')).toBe(null)
+  })
+
+  test('deleteSession should delete the session folder', () => {
+    const session = createSession()
+    expect(fs.existsSync(session.sessionDir)).toBe(true)
+    
+    const deleted = deleteSession(session.sessionDir)
+    expect(deleted).toBe(true)
+    expect(fs.existsSync(session.sessionDir)).toBe(false)
   })
 
   test('listIncompleteSessions should list incomplete sessions sorted newest first', () => {
