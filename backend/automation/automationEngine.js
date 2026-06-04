@@ -42,8 +42,8 @@ function saveScreenshot(sessionDir, invoiceId, site, base64Data) {
   return filename
 }
 
-async function waitForCaptchaAnswer(invoiceId, base64Image, attempt) {
-  broadcast({ type: 'captcha-required', payload: { id: invoiceId, image: base64Image, attempt } })
+async function waitForCaptchaAnswer(invoiceId, base64Image, attempt, site) {
+  broadcast({ type: 'captcha-required', payload: { id: invoiceId, image: base64Image, attempt, site } })
   return new Promise((resolve) => { captchaResolve = resolve })
 }
 
@@ -111,7 +111,7 @@ async function startProcessing(sessionDir, mode = 'auto') {
           const site1Result = await runGdtInvoicePortal(
             page,
             invoice,
-            (img, att) => waitForCaptchaAnswer(invoice.id, img, att),
+            (img, att) => waitForCaptchaAnswer(invoice.id, img, att, 1),
             (msg) => logStep(invoice.id, `[GDT Invoice Portal] ${msg}`)
           )
           site1Status = site1Result.status
@@ -181,7 +181,7 @@ async function startProcessing(sessionDir, mode = 'auto') {
           const site2Result = await runGdtTaxpayerPortal(
             page,
             representativeInvoice,
-            (img, att) => waitForCaptchaAnswer(representativeInvoice.id, img, att),
+            (img, att) => waitForCaptchaAnswer(representativeInvoice.id, img, att, 2),
             (msg) => logStep(representativeInvoice.id, `[GDT Taxpayer Portal] [TaxID: ${taxId}] ${msg}`)
           )
           site2Status = site2Result.status
