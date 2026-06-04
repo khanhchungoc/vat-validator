@@ -8,6 +8,11 @@ const { generateXLSX } = require('../output/xlsxGenerator')
 const fs = require('fs')
 const path = require('path')
 
+const SITES = {
+  INVOICE_PORTAL: 1,
+  TAXPAYER_PORTAL: 2
+}
+
 let browser = null
 let isRunning = false
 let stepMode = false
@@ -111,7 +116,7 @@ async function startProcessing(sessionDir, mode = 'auto') {
           const site1Result = await runGdtInvoicePortal(
             page,
             invoice,
-            (img, att) => waitForCaptchaAnswer(invoice.id, img, att, 1),
+            (img, att) => waitForCaptchaAnswer(invoice.id, img, att, SITES.INVOICE_PORTAL),
             (msg) => logStep(invoice.id, `[GDT Invoice Portal] ${msg}`)
           )
           site1Status = site1Result.status
@@ -181,7 +186,7 @@ async function startProcessing(sessionDir, mode = 'auto') {
           const site2Result = await runGdtTaxpayerPortal(
             page,
             representativeInvoice,
-            (img, att) => waitForCaptchaAnswer(representativeInvoice.id, img, att, 2),
+            (img, att) => waitForCaptchaAnswer(representativeInvoice.id, img, att, SITES.TAXPAYER_PORTAL),
             (msg) => logStep(representativeInvoice.id, `[GDT Taxpayer Portal] [TaxID: ${taxId}] ${msg}`)
           )
           site2Status = site2Result.status

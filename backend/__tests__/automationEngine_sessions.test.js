@@ -77,6 +77,39 @@ describe('Automation Engine Session Saving', () => {
         site: 1
       }
     })
+
+    await processPromise
+  })
+
+  test('should broadcast captcha-required with site: 2 for Phase 2', async () => {
+    const broadcastMock = jest.fn()
+    engine.setBroadcast(broadcastMock)
+
+    // Run startProcessing
+    const processPromise = engine.startProcessing('test-session-dir', 'auto')
+
+    // Yield control to the event loop so that startProcessing runs up to runGdtTaxpayerPortal
+    await new Promise(resolve => setImmediate(resolve))
+
+    // Retrieve the onCaptcha callback passed to runGdtTaxpayerPortal
+    // runGdtTaxpayerPortal is mocked to return pass/screenshot on invocation,
+    // but we can extract its 3rd argument (onCaptcha function)
+    const onCaptcha = runGdtTaxpayerPortal.mock.calls[0][2]
+    
+    // Simulate a CAPTCHA request being triggered
+    onCaptcha('mock-image-data-2', 1)
+
+    expect(broadcastMock).toHaveBeenCalledWith({
+      type: 'captcha-required',
+      payload: {
+        id: 'inv1',
+        image: 'mock-image-data-2',
+        attempt: 1,
+        site: 2
+      }
+    })
+
+    await processPromise
   })
 
   test('should call saveSession when starting processing and after completion', async () => {
