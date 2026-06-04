@@ -240,7 +240,7 @@
 - Modify: `backend/__tests__/sessionManager.test.js`
 - Modify: `backend/__tests__/routes_sessions.test.js`
 
-- [ ] **Step 1: Add `deleteSession` helper in `backend/sessionManager.js`**
+- [x] **Step 1: Add `deleteSession` helper in `backend/sessionManager.js`**
   Add definition and export it.
 
   Add function:
@@ -266,7 +266,7 @@
   module.exports = { createSession, saveSession, loadSession, deleteSession, listIncompleteSessions, OUTPUT_DIR, validateDir }
   ```
 
-- [ ] **Step 2: Add unit test in `backend/__tests__/sessionManager.test.js`**
+- [x] **Step 2: Add unit test in `backend/__tests__/sessionManager.test.js`**
   Add a test to verify `deleteSession` deletes the folder correctly.
 
   Add test content (around line 64):
@@ -281,7 +281,7 @@
     })
   ```
 
-- [ ] **Step 3: Expose `POST /sessions/delete` route in `backend/routes/sessions.js`**
+- [x] **Step 3: Expose `POST /sessions/delete` route in `backend/routes/sessions.js`**
   Import `deleteSession` and add the router callback.
 
   Find imports:
@@ -314,7 +314,7 @@
   })
   ```
 
-- [ ] **Step 4: Add route tests in `backend/__tests__/routes_sessions.test.js`**
+- [x] **Step 4: Add route tests in `backend/__tests__/routes_sessions.test.js`**
   Mock `deleteSession` and add test cases verifying success and failure handling of the deletion route.
 
   Update the mocked imports at line 16:
@@ -370,11 +370,11 @@
     })
   ```
 
-- [ ] **Step 5: Run backend tests to verify correctness**
+- [x] **Step 5: Run backend tests to verify correctness**
   Run: `npm test backend/__tests__/sessionManager.test.js backend/__tests__/routes_sessions.test.js`
   Expected: PASS
 
-- [ ] **Step 6: Commit Task 3 changes**
+- [x] **Step 6: Commit Task 3 changes**
   Run: `git add backend/sessionManager.js backend/routes/sessions.js backend/__tests__/sessionManager.test.js backend/__tests__/routes_sessions.test.js; git commit -m "feat(backend): implement session deletion API and tests"`
 
 ---
@@ -385,7 +385,7 @@
 - Modify: `src/components/ResumePanel.jsx`
 - Modify: `src/App.jsx`
 
-- [ ] **Step 1: Implement Delete Button in `src/components/ResumePanel.jsx`**
+- [x] **Step 1: Implement Delete Button in `src/components/ResumePanel.jsx`**
   Add a `handleDelete` callback fetching the delete endpoint, prompting confirmation, and calling a callback to update state.
 
   Rewrite `src/components/ResumePanel.jsx`:
@@ -463,7 +463,7 @@
   }
   ```
 
-- [ ] **Step 2: Update `ResumePanel` parameters in `src/App.jsx`**
+- [x] **Step 2: Update `ResumePanel` parameters in `src/App.jsx`**
   Modify `src/App.jsx` to pass `onDeleteSession` callback (so it can clean up if the current session directory was deleted).
 
   Find (around line 301):
@@ -484,10 +484,10 @@
                 )}
   ```
 
-- [ ] **Step 3: Build frontend client and run all Jest tests**
+- [x] **Step 3: Build frontend client and run all Jest tests**
   Run: `npm run build`
   Run: `npm test`
   Expected: Success.
 
-- [ ] **Step 4: Commit Task 4 changes**
+- [x] **Step 4: Commit Task 4 changes**
   Run: `git add src/components/ResumePanel.jsx src/App.jsx; git commit -m "feat(ui): integrate session deletion into ResumePanel"`
