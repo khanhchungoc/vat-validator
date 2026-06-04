@@ -1,4 +1,5 @@
 const express = require('express')
+const path = require('path')
 const sessionsRouter = require('../routes/sessions')
 const { getIsRunning } = require('../automation/automationEngine')
 const { clearInvoices, loadInvoices } = require('../invoiceStore')
@@ -13,20 +14,22 @@ jest.mock('../invoiceStore', () => ({
   loadInvoices: jest.fn()
 }))
 
-jest.mock('../sessionManager', () => ({
-  createSession: jest.fn(),
-  loadSession: jest.fn(),
-  deleteSession: jest.fn(),
-  listIncompleteSessions: jest.fn(),
-  OUTPUT_DIR: 'C:\\Users\\KhanhChuNgoc\\Documents\\Personal Projects\\VATOCR\\output',
-  validateDir: jest.fn().mockImplementation((dir) => {
-    if (!dir) return false
-    const path = require('path')
-    const absolute = path.resolve(dir)
-    const base = path.resolve('C:\\Users\\KhanhChuNgoc\\Documents\\Personal Projects\\VATOCR\\output')
-    return absolute === base || absolute.startsWith(base + path.sep)
-  })
-}))
+jest.mock('../sessionManager', () => {
+  const path = require('path')
+  const mockOutputDir = path.resolve('output')
+  return {
+    createSession: jest.fn(),
+    loadSession: jest.fn(),
+    deleteSession: jest.fn(),
+    listIncompleteSessions: jest.fn(),
+    OUTPUT_DIR: mockOutputDir,
+    validateDir: jest.fn().mockImplementation((dir) => {
+      if (!dir) return false
+      const absolute = path.resolve(dir)
+      return absolute === mockOutputDir || absolute.startsWith(mockOutputDir + path.sep)
+    })
+  }
+})
 
 // Helper to extract route handlers
 function getHandler(method, path) {
@@ -88,7 +91,7 @@ describe('Sessions Routes Logic', () => {
 
   describe('POST /resume', () => {
     const handler = getHandler('POST', '/resume')
-    const validDir = 'C:\\Users\\KhanhChuNgoc\\Documents\\Personal Projects\\VATOCR\\output\\session1'
+    const validDir = path.resolve('output', 'session1')
 
     test('returns 400 if automation is running', () => {
       getIsRunning.mockReturnValue(true)
@@ -106,7 +109,7 @@ describe('Sessions Routes Logic', () => {
 
     test('returns 400 if sessionDir is outside OUTPUT_DIR', () => {
       getIsRunning.mockReturnValue(false)
-      req.body.sessionDir = 'C:\\Users\\KhanhChuNgoc\\Documents\\Secret'
+      req.body.sessionDir = path.resolve('Secret')
       handler(req, res)
       expect(res.status).toHaveBeenCalledWith(400)
       expect(res.json).toHaveBeenCalledWith({ error: 'Invalid session directory' })
@@ -145,7 +148,18 @@ describe('Sessions Routes Logic', () => {
 
   describe('POST /delete', () => {
     const handler = getHandler('POST', '/delete')
-    const validDir = 'C:\\Users\\KhanhChuNgoc\\Documents\\Personal Projects\\VATOCR\\output\\session1'
+    const validDir = path.resolve('output', 'session1')
+
+    beforeEach(() => {
+      getIsRunning.mockReturnValue(false)
+    })
+
+    test('returns 400 if automation is running', () => {
+      getIsRunning.mockReturnValue(true)
+      handler(req, res)
+      expect(res.status).toHaveBeenCalledWith(400)
+      expect(res.json).toHaveBeenCalledWith({ error: 'Cannot delete sessions while automation is running' })
+    })
 
     test('returns 400 if sessionDir is missing', () => {
       handler(req, res)
@@ -154,7 +168,7 @@ describe('Sessions Routes Logic', () => {
     })
 
     test('returns 400 if sessionDir is invalid', () => {
-      req.body.sessionDir = 'C:\\Users\\KhanhChuNgoc\\Documents\\Secret'
+      req.body.sessionDir = path.resolve('Secret')
       handler(req, res)
       expect(res.status).toHaveBeenCalledWith(400)
       expect(res.json).toHaveBeenCalledWith({ error: 'Invalid session directory' })

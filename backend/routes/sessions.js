@@ -55,6 +55,10 @@ router.post('/resume', (req, res) => {
 
 // POST /sessions/delete - delete a session folder
 router.post('/delete', (req, res) => {
+  if (getIsRunning()) {
+    return res.status(400).json({ error: 'Cannot delete sessions while automation is running' })
+  }
+
   const { sessionDir } = req.body
   if (!sessionDir) return res.status(400).json({ error: 'sessionDir required' })
 

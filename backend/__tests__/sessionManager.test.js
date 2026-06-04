@@ -71,6 +71,12 @@ describe('sessionManager', () => {
     expect(fs.existsSync(session.sessionDir)).toBe(false)
   })
 
+  test('deleteSession should not delete the root output folder', () => {
+    const deleted = deleteSession(OUTPUT_DIR)
+    expect(deleted).toBe(false)
+    expect(fs.existsSync(OUTPUT_DIR)).toBe(true)
+  })
+
   test('listIncompleteSessions should list incomplete sessions sorted newest first', () => {
     const s1 = createSession()
     // Wait a bit to ensure different timestamps if needed, but getTimestamp has second precision

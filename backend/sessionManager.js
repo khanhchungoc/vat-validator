@@ -113,6 +113,11 @@ function deleteSession(sessionDir) {
     if (!validateDir(sessionDir)) {
       throw new Error(`Invalid session directory: ${sessionDir}`)
     }
+    const absolute = path.resolve(sessionDir)
+    const base = path.resolve(OUTPUT_DIR)
+    if (absolute === base) {
+      throw new Error('Cannot delete root output directory')
+    }
     if (fs.existsSync(sessionDir)) {
       fs.rmSync(sessionDir, { recursive: true, force: true })
     }
