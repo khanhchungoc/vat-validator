@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 
-export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip }) {
+export default function CaptchaModal({ imageBase64, attempt, site, onSubmit, onSkip }) {
   const [answer, setAnswer] = useState('')
   const inputRef = useRef(null)
 
@@ -59,7 +59,10 @@ export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip })
               type="text"
               placeholder="Enter CAPTCHA..."
               value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value
+                setAnswer(site === 1 ? val.toUpperCase() : val)
+              }}
               style={{
                 flex: 1,
                 padding: '10px 14px',
