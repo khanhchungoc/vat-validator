@@ -292,7 +292,7 @@ export default function App() {
                 }}>
                   <div style={{ flex: 1 }}>
                     <strong style={{ color: 'var(--fail)', display: 'block', marginBottom: 6 }}>⚠️ Processing Error</strong>
-                    <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--text-main)', userSelect: 'text' }}>{appError}</pre>
+                    <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--text-main)', userSelect: 'text', fontFamily: 'inherit' }}>{appError}</pre>
                   </div>
                   <button onClick={() => setAppError(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0 }}>✕</button>
                 </div>

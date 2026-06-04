@@ -44,7 +44,9 @@ export default function CaptchaModal({ imageBase64, attempt, onSubmit, onSkip })
               display: 'block',
               margin: '0 auto',
               borderRadius: '6px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              width: '240px',
+              height: 'auto'
             }}
           />
         </div>
