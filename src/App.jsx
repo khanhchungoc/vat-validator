@@ -377,6 +377,7 @@ export default function App() {
               <CaptchaModal
                 imageBase64={captchaData.image}
                 attempt={captchaData.attempt}
+                site={captchaData.site}
                 onSubmit={handleCaptchaSubmit}
                 onSkip={handleSkipInvoice}
               />
