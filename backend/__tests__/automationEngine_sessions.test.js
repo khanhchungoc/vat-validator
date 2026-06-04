@@ -29,7 +29,8 @@ describe('Automation Engine Session Saving', () => {
   let mockPage
   let mockBrowser
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await engine.stopProcessing()
     jest.clearAllMocks()
     mockPage = {
       goto: jest.fn(),
@@ -54,19 +55,12 @@ describe('Automation Engine Session Saving', () => {
     const broadcastMock = jest.fn()
     engine.setBroadcast(broadcastMock)
 
-    // Run startProcessing
-    const processPromise = engine.startProcessing('test-session-dir', 'auto')
+    runGdtInvoicePortal.mockImplementationOnce(async (page, invoice, onCaptcha, onLog) => {
+      onCaptcha('mock-image-data-1', 1)
+      return { status: 'pass', screenshotBase64: 'abc' }
+    })
 
-    // Yield control to the event loop so that startProcessing runs up to runGdtInvoicePortal
-    await new Promise(resolve => setImmediate(resolve))
-
-    // Retrieve the onCaptcha callback passed to runGdtInvoicePortal
-    // runGdtInvoicePortal is mocked to return pass/screenshot on invocation,
-    // but we can extract its 3rd argument (onCaptcha function)
-    const onCaptcha = runGdtInvoicePortal.mock.calls[0][2]
-    
-    // Simulate a CAPTCHA request being triggered
-    onCaptcha('mock-image-data-1', 1)
+    await engine.startProcessing('test-session-dir', 'auto')
 
     expect(broadcastMock).toHaveBeenCalledWith({
       type: 'captcha-required',
@@ -77,27 +71,18 @@ describe('Automation Engine Session Saving', () => {
         site: 1
       }
     })
-
-    await processPromise
   })
 
   test('should broadcast captcha-required with site: 2 for Phase 2', async () => {
     const broadcastMock = jest.fn()
     engine.setBroadcast(broadcastMock)
 
-    // Run startProcessing
-    const processPromise = engine.startProcessing('test-session-dir', 'auto')
+    runGdtTaxpayerPortal.mockImplementationOnce(async (page, invoice, onCaptcha, onLog) => {
+      onCaptcha('mock-image-data-2', 1)
+      return { status: 'pass', screenshotBase64: 'def' }
+    })
 
-    // Yield control to the event loop so that startProcessing runs up to runGdtTaxpayerPortal
-    await new Promise(resolve => setImmediate(resolve))
-
-    // Retrieve the onCaptcha callback passed to runGdtTaxpayerPortal
-    // runGdtTaxpayerPortal is mocked to return pass/screenshot on invocation,
-    // but we can extract its 3rd argument (onCaptcha function)
-    const onCaptcha = runGdtTaxpayerPortal.mock.calls[0][2]
-    
-    // Simulate a CAPTCHA request being triggered
-    onCaptcha('mock-image-data-2', 1)
+    await engine.startProcessing('test-session-dir', 'auto')
 
     expect(broadcastMock).toHaveBeenCalledWith({
       type: 'captcha-required',
@@ -108,8 +93,6 @@ describe('Automation Engine Session Saving', () => {
         site: 2
       }
     })
-
-    await processPromise
   })
 
   test('should call saveSession when starting processing and after completion', async () => {
