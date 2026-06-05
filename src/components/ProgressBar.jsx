@@ -12,16 +12,16 @@ export default function ProgressBar({ invoices }) {
   return (
     <div className="progress-container">
       <div className="progress-header">
-        <span className="progress-label">{done} / {total} invoices processed</span>
+        <span className="progress-label">Đã xử lý {done} / {total} hóa đơn</span>
         <span className="progress-pct">{pct}%</span>
       </div>
       <div className="progress-track">
         <div className="progress-fill" style={{ width: `${pct}%` }} />
       </div>
       <div className="progress-stats">
-        <span style={{ color: 'var(--pass)' }}>✅ {passed} Pass</span>
-        <span style={{ color: 'var(--fail)' }}>❌ {failed} Failed</span>
-        <span style={{ color: 'var(--skip)' }}>⚠️ {skipped} Skipped</span>
+        <span style={{ color: 'var(--pass)' }}>✅ {passed} Hợp lệ</span>
+        <span style={{ color: 'var(--fail)' }}>❌ {failed} Lỗi/Không hợp lệ</span>
+        <span style={{ color: 'var(--skip)' }}>⚠️ {skipped} Đã bỏ qua</span>
       </div>
     </div>
   )

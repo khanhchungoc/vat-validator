@@ -28,9 +28,9 @@ export default function DropZone({ onFilesUploaded, onError, disabled }) {
     } catch (e) {
       console.error('Upload failed:', e)
       if (onError) {
-        onError(`Failed to upload invoices: ${e.message}`)
+        onError(`Không thể tải lên hóa đơn: ${e.message}`)
       } else {
-        alert(`Failed to upload invoices: ${e.message}`)
+        alert(`Không thể tải lên hóa đơn: ${e.message}`)
       }
     } finally {
       setUploading(false)
@@ -67,10 +67,10 @@ export default function DropZone({ onFilesUploaded, onError, disabled }) {
         }} 
       />
       {uploading
-        ? <p>Uploading...</p>
+        ? <p>Đang tải lên...</p>
         : disabled 
-          ? <p>🔒 Processing active...</p>
-          : <p>📂 Drop XML files here or click to browse</p>}
+          ? <p>🔒 Đang trong quá trình xử lý...</p>
+          : <p>📂 Kéo thả các tệp XML vào đây hoặc click để duyệt tệp</p>}
     </div>
   )
 }

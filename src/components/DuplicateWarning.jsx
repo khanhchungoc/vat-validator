@@ -4,9 +4,9 @@ export default function DuplicateWarning({ duplicates, onRemove, onProceed }) {
   return (
     <div className="modal-overlay">
       <div className="modal">
-        <h3>⚠️ Duplicate Invoices Detected</h3>
+        <h3>⚠️ Phát hiện hóa đơn trùng lặp</h3>
         <p style={{ color: 'var(--text-muted)', marginBottom: 16, fontSize: '0.9rem' }}>
-          The following invoice IDs already exist in the queue. Remove them or proceed anyway.
+          Các mã hóa đơn sau đã tồn tại trong hàng đợi. Vui lòng loại bỏ hoặc tiếp tục.
         </p>
         <ul style={{ marginBottom: 20, paddingLeft: 20 }}>
           {duplicates.map(id => (
@@ -16,8 +16,8 @@ export default function DuplicateWarning({ duplicates, onRemove, onProceed }) {
           ))}
         </ul>
         <div className="modal-actions">
-          <button className="btn-secondary" onClick={onRemove}>Remove Duplicates</button>
-          <button className="btn-primary" onClick={onProceed}>Proceed Anyway</button>
+          <button className="btn-secondary" onClick={onRemove}>Loại bỏ trùng lặp</button>
+          <button className="btn-primary" onClick={onProceed}>Vẫn tiếp tục</button>
         </div>
       </div>
     </div>

@@ -17,7 +17,7 @@ export default function ResumePanel({ onResume, onDeleteSession }) {
   }, [])
 
   const handleDelete = async (session) => {
-    const confirmed = window.confirm(`Are you sure you want to permanently delete the session "${session.id.replace(/_/g, ' ')}"? This action cannot be undone.`)
+    const confirmed = window.confirm('Bạn có chắc chắn muốn xóa vĩnh viễn phiên làm việc này không? Thao tác này không thể hoàn tác.')
     if (!confirmed) return
 
     try {
@@ -43,13 +43,13 @@ export default function ResumePanel({ onResume, onDeleteSession }) {
 
   return (
     <div className="resume-panel">
-      <h3>📁 Resume Previous Sessions</h3>
+      <h3>📁 Khôi phục phiên làm việc trước</h3>
       {sessions.map(session => (
         <div key={session.id} className="resume-card">
           <div className="resume-info">
             <span className="resume-id">{session.id.replace(/_/g, ' ')}</span>
             <span className="resume-progress">
-              {session.progress.done}/{session.progress.total} invoices completed
+              Đã hoàn thành {session.progress.done}/{session.progress.total} hóa đơn
             </span>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -58,10 +58,10 @@ export default function ResumePanel({ onResume, onDeleteSession }) {
               style={{ borderColor: 'var(--fail)', color: 'var(--fail)' }} 
               onClick={() => handleDelete(session)}
             >
-              Delete
+              Xóa
             </button>
             <button className="btn-primary" onClick={() => onResume(session.sessionDir)}>
-              Resume →
+              Tiếp tục →
             </button>
           </div>
         </div>

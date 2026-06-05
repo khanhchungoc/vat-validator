@@ -143,7 +143,7 @@ export default function App() {
     if (sent) {
       setShowManualForm(false)
     } else {
-      setAppError('Failed to send manual invoice: WebSocket is disconnected.')
+      setAppError('Không thể gửi hóa đơn thủ công: WebSocket mất kết nối.')
     }
   }, [send])
 
@@ -187,10 +187,10 @@ export default function App() {
         setInvoices(data.invoices)
         setCurrentSessionDir(sessionDir)
       } else {
-        setAppError(data.error || 'Failed to resume session')
+        setAppError(data.error || 'Không thể khôi phục phiên làm việc')
       }
     } catch (e) {
-      setAppError('Failed to resume session')
+      setAppError('Không thể khôi phục phiên làm việc')
     }
   }, [])
 
@@ -219,11 +219,11 @@ export default function App() {
           sessionDir = data.sessionDir
           setCurrentSessionDir(sessionDir)
         } else {
-          setAppError('Failed to create session: ' + (data.error || 'Unknown error'))
+          setAppError('Không thể tạo phiên làm việc: ' + (data.error || 'Lỗi không xác định'))
           return
         }
       } catch (e) {
-        setAppError('Failed to create session')
+        setAppError('Không thể tạo phiên làm việc')
         return
       }
     }
@@ -231,7 +231,7 @@ export default function App() {
     setIsProcessing(true)
     const sent = send({ type: 'start-processing', payload: { sessionDir, mode } })
     if (!sent) {
-      setAppError('Failed to start processing: WebSocket is disconnected.')
+      setAppError('Không thể bắt đầu xử lý: WebSocket mất kết nối.')
       setIsProcessing(false)
     }
   }, [currentSessionDir, send])
@@ -239,7 +239,7 @@ export default function App() {
   const handleStopProcessing = useCallback(() => {
     const sent = send({ type: 'stop-processing' })
     if (!sent) {
-      setAppError('Failed to stop processing: WebSocket is disconnected.')
+      setAppError('Không thể dừng xử lý: WebSocket mất kết nối.')
     } else {
       setIsProcessing(false)
       setIsStepWaiting(false)
@@ -249,7 +249,7 @@ export default function App() {
   const handleAdvanceStep = useCallback(() => {
     const sent = send({ type: 'advance-step' })
     if (!sent) {
-      setAppError('Failed to advance step: WebSocket is disconnected.')
+      setAppError('Không thể tiếp tục bước tiếp theo: WebSocket mất kết nối.')
     } else {
       setIsStepWaiting(false)
     }
@@ -260,7 +260,7 @@ export default function App() {
     if (isProcessing) {
       const sent = send({ type: 'set-mode', payload: { mode: newMode === 'step' ? 'paused' : 'auto' } })
       if (!sent) {
-        setAppError('Failed to update mode: WebSocket is disconnected.')
+        setAppError('Không thể cập nhật chế độ: WebSocket mất kết nối.')
       }
     }
   }, [isProcessing, send])
@@ -275,7 +275,7 @@ export default function App() {
             onClick={() => setShowConsole(!showConsole)}
             title="Toggle Live Activity Console"
           >
-            {showConsole ? '✕ Close Log' : '📋 Activity Log'}
+            {showConsole ? '✕ Đóng nhật ký' : '📋 Nhật ký hoạt động'}
           </button>
           <span className="ws-status">{wsStatus}</span>
         </div>
@@ -291,7 +291,7 @@ export default function App() {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12
                 }}>
                   <div style={{ flex: 1 }}>
-                    <strong style={{ color: 'var(--fail)', display: 'block', marginBottom: 6 }}>⚠️ Processing Error</strong>
+                    <strong style={{ color: 'var(--fail)', display: 'block', marginBottom: 6 }}>⚠️ Lỗi xử lý</strong>
                     <pre style={{ margin: 0, fontSize: '0.78rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--text-main)', userSelect: 'text', fontFamily: 'inherit' }}>{appError}</pre>
                   </div>
                   <button onClick={() => setAppError(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0 }}>✕</button>
@@ -314,14 +314,14 @@ export default function App() {
                       onClick={() => handleStartProcessing(processingMode)}
                       disabled={invoices.length === 0}
                     >
-                      🚀 Start Processing
+                      🚀 Bắt đầu xử lý
                     </button>
                     {invoices.some(i => i.status === 'skipped') && (
                       <button 
                         className="btn-secondary" 
                         onClick={() => send({ type: 'reset-skipped', payload: { sessionDir: currentSessionDir } })}
                       >
-                        🔄 Reset Skipped to Pending
+                        🔄 Khôi phục trạng thái Chờ
                       </button>
                     )}
                     <ModeToggle 
@@ -333,7 +333,7 @@ export default function App() {
                       className="btn-secondary" 
                       onClick={() => setShowManualForm(true)}
                     >
-                      + Add Invoice Manually
+                      ＋ Thêm hóa đơn thủ công
                     </button>
                     {(invoices.length > 0 || currentSessionDir) && (
                       <button 
@@ -341,14 +341,14 @@ export default function App() {
                         onClick={handleClearSession}
                         title="Clear all invoices and start a new session"
                       >
-                        🧹 Clear & New Session
+                        🧹 Xóa & Phiên mới
                       </button>
                     )}
                   </>
                 ) : (
                   <>
                     <button className="btn-stop" onClick={handleStopProcessing}>
-                      🛑 Stop
+                      🛑 Dừng
                     </button>
                     <ModeToggle 
                       mode={processingMode} 

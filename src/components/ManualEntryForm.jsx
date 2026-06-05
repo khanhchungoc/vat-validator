@@ -17,13 +17,13 @@ export default function ManualEntryForm({ onSubmit, onClose }) {
     // Clean string-based validation
     const missing = required.filter(k => !String(form[k]).trim())
     if (missing.length > 0) { 
-      setError(`Required fields missing: ${missing.join(', ')}`)
+      setError(`Thiếu các thông tin bắt buộc: ${missing.join(', ')}`)
       return 
     }
 
     const numericAmount = Number(form.totalAmount)
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      setError('Total Amount must be a valid positive number.')
+      setError('Tổng tiền phải là số dương hợp lệ.')
       return
     }
 
@@ -37,18 +37,18 @@ export default function ManualEntryForm({ onSubmit, onClose }) {
   }
 
   const fields = [
-    { name: 'invoiceCode', label: 'Invoice Code (Ký hiệu)', required: true },
-    { name: 'invoiceNumber', label: 'Invoice Number (Số HĐ)', required: true },
-    { name: 'sellerName', label: 'Seller Name', required: true },
-    { name: 'taxId', label: 'Tax ID (MST)', required: true },
-    { name: 'sellerAddress', label: 'Seller Address', required: false },
-    { name: 'totalAmount', label: 'Total Amount (VND)', required: true, type: 'number' }
+    { name: 'invoiceCode', label: 'Ký hiệu hóa đơn', required: true },
+    { name: 'invoiceNumber', label: 'Số hóa đơn', required: true },
+    { name: 'sellerName', label: 'Tên người bán', required: true },
+    { name: 'taxId', label: 'Mã số thuế (MST)', required: true },
+    { name: 'sellerAddress', label: 'Địa chỉ người bán', required: false },
+    { name: 'totalAmount', label: 'Tổng tiền (VND)', required: true, type: 'number' }
   ]
 
   return (
     <div className="modal-overlay">
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <h3>Add Invoice Manually</h3>
+        <h3>Thêm hóa đơn thủ công</h3>
         {error && <p className="error">{error}</p>}
         <form onSubmit={handleSubmit}>
           {fields.map(f => (
@@ -59,8 +59,8 @@ export default function ManualEntryForm({ onSubmit, onClose }) {
             </div>
           ))}
           <div className="modal-actions">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary">Add Invoice</button>
+            <button type="button" className="btn-secondary" onClick={onClose}>Hủy</button>
+            <button type="submit" className="btn-primary">Thêm hóa đơn</button>
           </div>
         </form>
       </div>

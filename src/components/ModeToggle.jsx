@@ -1,23 +1,23 @@
 export default function ModeToggle({ mode, onChange, disabled }) {
   return (
     <div className="mode-toggle">
-      <span className="mode-label">Processing Mode:</span>
+      <span className="mode-label">Chế độ xử lý:</span>
       <div className="mode-options">
         <button
           className={`mode-btn ${mode === 'auto' ? 'active' : ''}`}
           onClick={() => onChange('auto')}
           disabled={disabled}
-          title="Process all invoices continuously"
+          title="Xử lý liên tục tất cả hóa đơn"
         >
-          ▶ Auto
+          ▶ Tự động
         </button>
         <button
           className={`mode-btn ${mode === 'step' ? 'active' : ''}`}
           onClick={() => onChange('step')}
           disabled={disabled}
-          title="Pause after each invoice for review"
+          title="Tạm dừng sau mỗi hóa đơn để kiểm tra"
         >
-          👣 Step
+          👣 Từng bước
         </button>
       </div>
     </div>

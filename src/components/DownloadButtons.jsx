@@ -3,16 +3,16 @@ export default function DownloadButtons({ pdfUrl, xlsxUrl }) {
 
   return (
     <div className="download-section">
-      <h3>✅ Batch Complete — Download Results</h3>
+      <h3>✅ Hoàn thành loạt xử lý — Tải kết quả</h3>
       <div className="download-buttons">
         {pdfUrl && (
           <a href={pdfUrl} download className="btn-download btn-pdf">
-            📄 Download PDF
+            📄 Tải tệp PDF
           </a>
         )}
         {xlsxUrl && (
           <a href={xlsxUrl} download className="btn-download btn-xlsx">
-            📊 Download Excel Summary
+            📊 Tải tệp Excel tổng hợp
           </a>
         )}
       </div>

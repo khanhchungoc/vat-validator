@@ -27,7 +27,7 @@ export default function LiveConsole({ logs = [], isProcessing, onClose }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div className={`console-status-indicator ${isProcessing ? 'active' : 'idle'}`}></div>
-            <span className="console-title-text">&gt;_ Live Activity Log</span>
+            <span className="console-title-text">&gt;_ Nhật ký hoạt động thời gian thực</span>
           </div>
           <span className={`console-chevron ${isOpen ? 'open' : ''}`}>▼</span>
         </button>
@@ -38,7 +38,7 @@ export default function LiveConsole({ logs = [], isProcessing, onClose }) {
         <div className="console-body">
           {logs.length === 0 ? (
             <div className="console-placeholder">
-              <span>Waiting for automation to start. Real-time steps will appear here...</span>
+              <span>Đang chờ tiến trình tự động bắt đầu. Các bước thực hiện sẽ hiển thị ở đây...</span>
             </div>
           ) : (
             <div className="console-lines">

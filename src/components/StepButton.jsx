@@ -3,7 +3,7 @@ export default function StepButton({ visible, onStep }) {
 
   return (
     <button className="step-button" onClick={onStep}>
-      Review done — Step → Next Invoice
+      Xác nhận xem xong — Tiếp tục → Hóa đơn kế tiếp
     </button>
   )
 }
