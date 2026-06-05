@@ -6,6 +6,18 @@ function formatAmount(amount) {
   return Number(amount).toLocaleString('vi-VN') + ' ₫'
 }
 
+const getStatusLabel = (status) => {
+  const mapping = {
+    'pass': 'HỢP LỆ',
+    'invalid-invoice': 'HÓA ĐƠN KHÔNG HỢP LỆ',
+    'invalid-business': 'DN KHÔNG HOẠT ĐỘNG',
+    'skipped': 'ĐÃ BỎ QUA',
+    'pending': 'ĐANG CHỜ',
+    'processing': 'ĐANG XỬ LÝ'
+  }
+  return mapping[status] || status.toUpperCase()
+}
+
 function buildInvoicePageHTML(invoice, screenshotsDir) {
   const site1Path = invoice.site1Screenshot
     ? path.join(screenshotsDir, invoice.site1Screenshot)
@@ -32,23 +44,23 @@ function buildInvoicePageHTML(invoice, screenshotsDir) {
         <div class="screenshot-label">${label}</div>
         <img src="data:image/png;base64,${b64}" class="screenshot" />
        </div>`
-    : `<div class="screenshot-col"><div class="screenshot-label">${label}</div><p class="no-screenshot">Not captured</p></div>`
+    : `<div class="screenshot-col"><div class="screenshot-label">${label}</div><p class="no-screenshot">Không chụp được</p></div>`
 
   return `
     <div class="invoice-page">
       <div class="invoice-header">
-        <h2>Invoice: ${invoice.invoiceCode} / ${invoice.invoiceNumber}</h2>
-        <span class="status-badge status-${invoice.status}">${invoice.status.replace('-', ' ').toUpperCase()}</span>
+        <h2>Hóa đơn: ${invoice.invoiceCode} / ${invoice.invoiceNumber}</h2>
+        <span class="status-badge status-${invoice.status}">${getStatusLabel(invoice.status)}</span>
       </div>
       <table class="invoice-meta">
-        <tr><td>Seller</td><td>${invoice.sellerName}</td></tr>
-        <tr><td>Tax ID</td><td>${invoice.taxId}</td></tr>
-        <tr><td>Address</td><td>${invoice.sellerAddress || '—'}</td></tr>
-        <tr><td>Total Amount</td><td>${formatAmount(invoice.totalAmount)}</td></tr>        
+        <tr><td>Người bán</td><td>${invoice.sellerName}</td></tr>
+        <tr><td>Mã số thuế</td><td>${invoice.taxId}</td></tr>
+        <tr><td>Địa chỉ</td><td>${invoice.sellerAddress || '—'}</td></tr>
+        <tr><td>Tổng tiền</td><td>${formatAmount(invoice.totalAmount)}</td></tr>        
       </table>
       <div class="screenshots">
-        ${imgTag(site1B64, 'GDT Invoice Portal — hoadondientu.gdt.gov.vn')}
-        ${imgTag(site2B64, 'GDT Taxpayer Portal — tracuunnt.gdt.gov.vn')}
+        ${imgTag(site1B64, 'Cổng thông tin HĐĐT TCT — hoadondientu.gdt.gov.vn')}
+        ${imgTag(site2B64, 'Cổng thông tin NNT TCT — tracuunnt.gdt.gov.vn')}
       </div>
     </div>
   `

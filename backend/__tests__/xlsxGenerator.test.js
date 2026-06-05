@@ -49,9 +49,9 @@ describe('xlsxGenerator', () => {
     const data = XLSX.utils.sheet_to_json(worksheet)
 
     expect(data.length).toBe(2)
-    expect(data[0]['Invoice Number']).toBe('12345')
-    expect(data[0]['Status']).toBe('Pass')
-    expect(data[1]['Invoice Number']).toBe('67890')
-    expect(data[1]['Status']).toBe('Invalid Invoice')
+    expect(data[0]['Số hóa đơn']).toBe('12345')
+    expect(data[0]['Trạng thái']).toBe('Hợp lệ')
+    expect(data[1]['Số hóa đơn']).toBe('67890')
+    expect(data[1]['Trạng thái']).toBe('Hóa đơn không hợp lệ')
   })
 })

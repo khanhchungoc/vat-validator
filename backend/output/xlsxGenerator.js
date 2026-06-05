@@ -3,11 +3,11 @@ const path = require('path')
 const fs = require('fs')
 
 const STATUS_LABELS = {
-  pass: 'Pass',
-  'invalid-invoice': 'Invalid Invoice',
-  'invalid-business': 'Invalid Business',
-  skipped: 'Skipped',
-  pending: 'Pending'
+  pass: 'Hợp lệ',
+  'invalid-invoice': 'Hóa đơn không hợp lệ',
+  'invalid-business': 'Doanh nghiệp không hoạt động',
+  skipped: 'Đã bỏ qua',
+  pending: 'Đang chờ'
 }
 
 const STATUS_FILLS = {
@@ -26,7 +26,7 @@ const STATUS_FILLS = {
  */
 function generateXLSX(sessionDir, invoices) {
   const wb = XLSX.utils.book_new()
-  const header = ['#', 'Invoice Code', 'Invoice Number', 'Seller Name', 'Tax ID', 'Amount (VND)', 'Status']
+  const header = ['STT', 'Ký hiệu hóa đơn', 'Số hóa đơn', 'Tên người bán', 'Mã số thuế', 'Tổng tiền (VND)', 'Trạng thái']
   const rows = invoices.map((inv, i) => [
     i + 1,
     inv.invoiceCode,
@@ -41,7 +41,7 @@ function generateXLSX(sessionDir, invoices) {
   const ws = XLSX.utils.aoa_to_sheet(wsData)
   
   // Apply column widths
-  ws['!cols'] = [ { wch: 4 }, { wch: 14 }, { wch: 16 }, { wch: 45 }, { wch: 18 }, { wch: 16 }, { wch: 20 } ]
+  ws['!cols'] = [ { wch: 5 }, { wch: 18 }, { wch: 18 }, { wch: 50 }, { wch: 18 }, { wch: 18 }, { wch: 25 } ]
 
   // Apply header styling
   const range = XLSX.utils.decode_range(ws['!ref'])
