@@ -23,7 +23,7 @@ export default function LiveConsole({ logs = [], isProcessing, onClose }) {
         <button 
           className="console-header-btn"
           onClick={() => setIsOpen(!isOpen)}
-          title={isOpen ? "Collapse console" : "Expand console"}
+          title={isOpen ? "Thu nhỏ nhật ký" : "Mở rộng nhật ký"}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div className={`console-status-indicator ${isProcessing ? 'active' : 'idle'}`}></div>
@@ -31,7 +31,7 @@ export default function LiveConsole({ logs = [], isProcessing, onClose }) {
           </div>
           <span className={`console-chevron ${isOpen ? 'open' : ''}`}>▼</span>
         </button>
-        <button className="console-close-btn" onClick={onClose} title="Hide console sidebar">✕</button>
+        <button className="console-close-btn" onClick={onClose} title="Ẩn cột nhật ký">✕</button>
       </div>
 
       {isOpen && (

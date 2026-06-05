@@ -20,14 +20,19 @@ import ProgressBar from './components/ProgressBar'
 import StepButton from './components/StepButton'
 import LiveConsole from './components/LiveConsole'
 
-
+const WS_STATUS_LABELS = {
+  'connecting': 'Đang kết nối...',
+  'connected': 'Đã kết nối ✅',
+  'error': 'Lỗi kết nối ❌',
+  'disconnected': 'Mất kết nối ❌'
+};
 
 export default function App() {
   const [invoices, setInvoices] = useState([])
   const [showManualForm, setShowManualForm] = useState(false)
   const [appError, setAppError] = useState(null)
   const [captchaData, setCaptchaData] = useState(null)
-  const [wsStatus, setWsStatus] = useState('Connecting...')
+  const [wsStatus, setWsStatus] = useState('connecting')
   const [currentSessionDir, setCurrentSessionDir] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingMode, setProcessingMode] = useState('auto')
@@ -42,14 +47,14 @@ export default function App() {
   const handleWsMessage = useCallback((msg) => {
     if (msg.type === 'ws-status') {
       setWsStatus(msg.payload)
-      if (msg.payload.includes('Disconnected') || msg.payload.includes('Error')) {
+      if (msg.payload === 'disconnected' || msg.payload === 'error') {
         setIsProcessing(false)
         setIsStepWaiting(false)
         setCaptchaData(null)
       }
     }
     if (msg.type === 'pong') {
-      setWsStatus('Connected ✅')
+      setWsStatus('connected')
     }
     if (msg.type === 'invoice-added') {
       setInvoices(prev => {
@@ -273,11 +278,11 @@ export default function App() {
           <button 
             className={`btn-console-toggle ${showConsole ? 'active' : ''}`}
             onClick={() => setShowConsole(!showConsole)}
-            title="Toggle Live Activity Console"
+            title="Đóng/Mở nhật ký hoạt động thời gian thực"
           >
             {showConsole ? '✕ Đóng nhật ký' : '📋 Nhật ký hoạt động'}
           </button>
-          <span className="ws-status">{wsStatus}</span>
+          <span className="ws-status">{WS_STATUS_LABELS[wsStatus] || wsStatus}</span>
         </div>
       </header>
       <main className="app-main">
@@ -339,7 +344,7 @@ export default function App() {
                       <button 
                         className="btn-danger-outline" 
                         onClick={handleClearSession}
-                        title="Clear all invoices and start a new session"
+                        title="Xóa tất cả hóa đơn và bắt đầu phiên mới"
                       >
                         🧹 Xóa & Phiên mới
                       </button>

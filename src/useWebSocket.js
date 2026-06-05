@@ -21,7 +21,7 @@ export function useWebSocket(onMessage) {
 
       console.log('[WS] Connecting to backend...')
       if (onMessageRef.current) {
-        onMessageRef.current({ type: 'ws-status', payload: 'Connecting...' })
+        onMessageRef.current({ type: 'ws-status', payload: 'connecting' })
       }
 
       // In production Electron loads: file:///dist/index.html?port=XXXXX
@@ -33,7 +33,7 @@ export function useWebSocket(onMessage) {
       socket.onopen = () => {
         console.log('[WS] Connected to backend')
         if (onMessageRef.current) {
-          onMessageRef.current({ type: 'ws-status', payload: 'Connected ✅' })
+          onMessageRef.current({ type: 'ws-status', payload: 'connected' })
         }
         socket.send(JSON.stringify({ type: 'ping' }))
       }
@@ -50,14 +50,14 @@ export function useWebSocket(onMessage) {
       socket.onerror = (err) => {
         console.error('[WS] Socket error:', err)
         if (onMessageRef.current) {
-          onMessageRef.current({ type: 'ws-status', payload: 'Connection Error ❌' })
+          onMessageRef.current({ type: 'ws-status', payload: 'error' })
         }
       }
 
       socket.onclose = () => {
         console.log('[WS] Disconnected, scheduling reconnect...')
         if (onMessageRef.current) {
-          onMessageRef.current({ type: 'ws-status', payload: 'Disconnected ❌' })
+          onMessageRef.current({ type: 'ws-status', payload: 'disconnected' })
         }
         reconnectTimer.current = setTimeout(connect, 3000)
       }
