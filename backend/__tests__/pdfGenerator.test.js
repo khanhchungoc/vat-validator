@@ -34,10 +34,8 @@ describe('pdfGenerator', () => {
         address: '123 Test St',
         totalAmount: 1000000,
         status: 'pass',
-        screenshots: {
-          site1: 'screenshots/inv1_site1.png',
-          site2: 'screenshots/inv1_site2.png'
-        }
+        site1Screenshot: 'inv1_site1.png',
+        site2Screenshot: 'inv1_site2.png'
       }
     ];
 

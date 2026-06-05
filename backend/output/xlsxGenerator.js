@@ -7,7 +7,8 @@ const STATUS_LABELS = {
   'invalid-invoice': 'Hóa đơn không hợp lệ',
   'invalid-business': 'Doanh nghiệp không hoạt động',
   skipped: 'Đã bỏ qua',
-  pending: 'Đang chờ'
+  pending: 'Đang chờ',
+  processing: 'Đang xử lý'
 }
 
 const STATUS_FILLS = {
@@ -15,7 +16,8 @@ const STATUS_FILLS = {
   'invalid-invoice': { patternType: 'solid', fgColor: { argb: 'FFFF9999' } }, // light red
   'invalid-business': { patternType: 'solid', fgColor: { argb: 'FFFF9999' } },
   skipped: { patternType: 'solid', fgColor: { argb: 'FFFFE066' } },          // light yellow
-  pending: { patternType: 'solid', fgColor: { argb: 'FFFFFFFF' } }
+  pending: { patternType: 'solid', fgColor: { argb: 'FFFFFFFF' } },
+  processing: { patternType: 'solid', fgColor: { argb: 'FFD9ECFF' } }         // light blue
 }
 
 /**
@@ -41,7 +43,7 @@ function generateXLSX(sessionDir, invoices) {
   const ws = XLSX.utils.aoa_to_sheet(wsData)
   
   // Apply column widths
-  ws['!cols'] = [ { wch: 5 }, { wch: 18 }, { wch: 18 }, { wch: 50 }, { wch: 18 }, { wch: 18 }, { wch: 25 } ]
+  ws['!cols'] = [ { wch: 5 }, { wch: 18 }, { wch: 18 }, { wch: 50 }, { wch: 18 }, { wch: 18 }, { wch: 30 } ]
 
   // Apply header styling
   const range = XLSX.utils.decode_range(ws['!ref'])

@@ -106,14 +106,16 @@ async function generatePDF(sessionDir, invoices) {
 <body>${pagesHTML}</body></html>`
 
   const browser = await chromium.launch()
-  const page = await browser.newPage()
-  await page.setContent(fullHTML, { waitUntil: 'networkidle' })
+  try {
+    const page = await browser.newPage()
+    await page.setContent(fullHTML, { waitUntil: 'networkidle' })
 
-  const outputPath = path.join(sessionDir, 'results.pdf')
-  await page.pdf({ path: outputPath, format: 'A4', landscape: true, printBackground: true })
-  await browser.close()
-
-  return outputPath
+    const outputPath = path.join(sessionDir, 'results.pdf')
+    await page.pdf({ path: outputPath, format: 'A4', landscape: true, printBackground: true })
+    return outputPath
+  } finally {
+    await browser.close()
+  }
 }
 
 module.exports = { generatePDF }
