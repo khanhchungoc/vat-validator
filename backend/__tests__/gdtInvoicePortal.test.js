@@ -19,8 +19,8 @@ describe('verifySiteLoaded', () => {
     expect(result).toBe(true)
     expect(mockPage.waitForSelector).toHaveBeenCalledTimes(1)
     expect(mockPage.goto).not.toHaveBeenCalled()
-    expect(logs).toContain('Verifying GDT Portal loaded successfully...')
-    expect(logs).toContain('GDT Portal loaded successfully!')
+    expect(logs).toContain('Đang xác minh Cổng thông tin HĐĐT tải thành công...')
+    expect(logs).toContain('Cổng thông tin HĐĐT đã tải thành công!')
   })
 
   test('retries on failure and resolves true on subsequent success', async () => {
@@ -34,9 +34,9 @@ describe('verifySiteLoaded', () => {
     expect(mockPage.waitForSelector).toHaveBeenCalledTimes(2)
     expect(mockPage.goto).toHaveBeenCalledTimes(1)
     expect(mockPage.goto).toHaveBeenCalledWith('https://test.url', { waitUntil: 'networkidle', timeout: 30000 })
-    expect(logs.some(l => l.includes('Site load check failed on attempt 1'))).toBe(true)
-    expect(logs.some(l => l.includes('Reloading GDT Portal page (attempt 2/3)'))).toBe(true)
-    expect(logs).toContain('GDT Portal loaded successfully!')
+    expect(logs.some(l => l.includes('Tải trang thất bại tại lần thử 1'))).toBe(true)
+    expect(logs.some(l => l.includes('Đang tải lại Cổng thông tin HĐĐT (Lần thử 2/3)'))).toBe(true)
+    expect(logs).toContain('Cổng thông tin HĐĐT đã tải thành công!')
   })
 
   test('resolves false after max attempts fail', async () => {
@@ -46,6 +46,6 @@ describe('verifySiteLoaded', () => {
     expect(result).toBe(false)
     expect(mockPage.waitForSelector).toHaveBeenCalledTimes(3)
     expect(mockPage.goto).toHaveBeenCalledTimes(2) // attempt 2 and 3 reloads
-    expect(logs.some(l => l.includes('Site load check failed on attempt 3'))).toBe(true)
+    expect(logs.some(l => l.includes('Tải trang thất bại tại lần thử 3'))).toBe(true)
   })
 })

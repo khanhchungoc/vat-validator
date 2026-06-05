@@ -166,7 +166,7 @@ async function startProcessing(sessionDir, mode = 'auto') {
     const site2Cache = {}
 
     if (uniqueTaxIds.length > 0) {
-      logStep('engine', 'Phase 1 complete. Starting Tax ID lookups on GDT Taxpayer Portal...')
+      logStep('engine', 'Hoàn thành Pha 1. Bắt đầu tra cứu Mã số thuế trên Cổng thông tin NNT...')
     }
 
     for (const taxId of uniqueTaxIds) {

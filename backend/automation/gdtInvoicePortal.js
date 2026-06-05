@@ -18,18 +18,18 @@ async function verifySiteLoaded(page, url, selector, maxAttempts = 3, onLog = ()
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       if (attempt > 1) {
-        onLog(`Site load check failed. Reloading GDT Portal page (attempt ${attempt}/${maxAttempts})...`)
+        onLog(`Kiểm tra tải trang thất bại. Đang tải lại Cổng thông tin HĐĐT (Lần thử ${attempt}/${maxAttempts})...`)
         await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })
       } else {
-        onLog(`Verifying GDT Portal loaded successfully...`)
+        onLog(`Đang xác minh Cổng thông tin HĐĐT tải thành công...`)
       }
       
       // Wait for the key input element to be visible
       await page.waitForSelector(selector, { state: 'visible', timeout: 10000 })
-      onLog('GDT Portal loaded successfully!')
+      onLog('Cổng thông tin HĐĐT đã tải thành công!')
       return true
     } catch (err) {
-      onLog(`Site load check failed on attempt ${attempt}: ${err.message}`)
+      onLog(`Tải trang thất bại tại lần thử ${attempt}: ${err.message}`)
     }
   }
   return false
@@ -51,7 +51,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
   }
 
   if (!isGdtUrl || !isLoaded) {
-    onLog('Navigating to GDT Portal (https://hoadondientu.gdt.gov.vn/)...')
+    onLog('Đang truy cập Cổng thông tin HĐĐT (https://hoadondientu.gdt.gov.vn/)...')
     await page.goto(SITE1_URL, { waitUntil: 'networkidle', timeout: 30000 })
 
     const loaded = await verifySiteLoaded(page, SITE1_URL, 'input#nbmst', 3, onLog)
@@ -63,13 +63,13 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
     try {
       const closeBtn = await page.$('.ant-modal-close')
       if (closeBtn) {
-        onLog('Bypassing announcement popup...')
+        onLog('Đang đóng thông báo popup...')
         await closeBtn.click()
         await page.waitForTimeout(getRandomDelay(500)) // Wait for modal fade out animation
       }
     } catch (err) {}
   } else {
-    onLog('Already on GDT Portal. Resetting form fields for new query...')
+    onLog('Đã ở trên Cổng thông tin HĐĐT. Đang đặt lại các trường dữ liệu...')
     
     // Save current captcha src before refresh so we can wait for the change
     const oldSrc = await page.evaluate(() => {
@@ -100,7 +100,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
     }
   }
 
-  onLog(`Filling invoice details: Seller Tax ID (${invoice.taxId}), Code, Number, Amount...`)
+  onLog(`Đang điền thông tin hóa đơn: MST bán (${invoice.taxId}), Ký hiệu, Số HĐ, Tổng tiền...`)
   // Fill form fields
   // 1. Seller Tax ID
   await page.fill('input#nbmst, input[name="mstNban"], input[placeholder*="người bán"], input[id*="mstNban"]', invoice.taxId)
@@ -139,7 +139,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       }
     } catch (err) {}
 
-    onLog(`Capturing CAPTCHA image (attempt ${attempt})...`)
+    onLog(`Đang chụp ảnh mã CAPTCHA (Lần thử ${attempt})...`)
     // Capture CAPTCHA image
     const captchaEl = await page.$('img[src*="captcha"], img[alt*="captcha"], img[id*="captcha"]')
     if (!captchaEl) throw new Error('CAPTCHA element not found on GDT Invoice Portal')
@@ -178,7 +178,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
       : await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
 
-    onLog('Please solve the CAPTCHA directly in GDT\'s opened browser window...')
+    onLog('Vui lòng giải CAPTCHA trực tiếp trên trình duyệt GDT đang mở...')
 
     // Focus GDT's input field so they can immediately type without clicking it!
     try {
@@ -220,7 +220,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
         if (raceFinished) return null
         if (userSkipped) return null
         if (electronAnswer) {
-          onLog(`Typing CAPTCHA answer "${electronAnswer}" into GDT portal...`)
+          onLog(`Đang nhập mã CAPTCHA "${electronAnswer}" vào ô xác thực...`)
           // Clear and focus GDT's input field
           await page.fill('input#cvalue', '')
           await page.focus('input#cvalue')
@@ -247,7 +247,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
 
     // 1. Check for incorrect CAPTCHA (HTTP 401 Unauthorized)
     if (response.status() === 401) {
-      onLog('GDT returned HTTP 401 (Incorrect CAPTCHA). Refreshing and retrying...')
+      onLog('Cổng thông tin báo lỗi CAPTCHA (401). Đang làm mới và thử lại...')
       console.log(`[GDT Invoice Portal] Incorrect CAPTCHA submitted (attempt ${attempt}). Retrying...`)
 
       // Wait for captcha src to actually change to prevent screenshotting the old CAPTCHA
@@ -279,7 +279,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
 
       // If the body is null or represents an empty object/array, the invoice does not exist
       if (!body || Object.keys(body).length === 0) {
-        onLog('GDT returned HTTP 200 (Invoice not found). Capturing error screenshot...')
+        onLog('Cổng thông tin phản hồi: Không tìm thấy hóa đơn. Đang chụp ảnh màn hình lỗi...')
         console.log(`[GDT Invoice Portal] Invoice not found via API.`)
         // Wait for UI to render the "Không tìm thấy" error message
         await page.locator('text=Không tìm thấy')
@@ -292,7 +292,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
         const screenshotBase64 = screenshotBuffer.toString('base64')
         return { ok: true, screenshotBase64, status: 'invalid-invoice' }
       } else {
-        onLog('GDT returned HTTP 200 (Invoice verified!). Capturing success screenshot...')
+        onLog('Cổng thông tin phản hồi: Hóa đơn hợp lệ! Đang chụp ảnh màn hình kết quả...')
         console.log(`[GDT Invoice Portal] Invoice verified successfully via API.`)
         // Wait for UI to render the "Tồn tại hóa đơn" success message
         await page.locator('text=Tồn tại hóa đơn có thông tin trùng khớp')
@@ -311,7 +311,7 @@ async function runGdtInvoicePortal(page, invoice, onCaptcha, onLog = () => {}) {
 
   // Fallback: If we broke out of the loop (e.g. captcha was accepted but the API response timed out or failed),
   // perform standard DOM-based verification checks and return a valid result.
-  onLog('API response timed out or failed. Falling back to DOM verification checks...')
+  onLog('Hết thời gian phản hồi API hoặc lỗi. Đang chuyển sang xác minh trên giao diện DOM...')
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
   const screenshotBuffer = await page.screenshot({ fullPage: false })
   const screenshotBase64 = screenshotBuffer.toString('base64')

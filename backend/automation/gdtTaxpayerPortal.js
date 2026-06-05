@@ -24,10 +24,10 @@ function getRandomDelay(baseMs) {
 async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) {
   const currentUrl = page.url()
   if (!currentUrl.includes('tracuunnt.gdt.gov.vn')) {
-    onLog('Navigating to Taxpayer Portal (https://tracuunnt.gdt.gov.vn/)...')
+    onLog('Đang truy cập Cổng thông tin người nộp thuế (https://tracuunnt.gdt.gov.vn/)...')
     await page.goto(SITE2_URL, { waitUntil: 'networkidle', timeout: 30000 })
   } else {
-    onLog('Already on Taxpayer Portal. Resetting form fields for new query...')
+    onLog('Đã ở trên Cổng thông tin NNT. Đang đặt lại các trường dữ liệu...')
     
     // Save current captcha src before refresh so we can wait for the change
     // Clear fields
@@ -48,7 +48,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
   let attempt = 0
   while (true) {
     attempt++
-    onLog(`Capturing CAPTCHA image (attempt ${attempt})...`)
+    onLog(`Đang chụp ảnh mã CAPTCHA (Lần thử ${attempt})...`)
     const captchaEl = await page.$('img[src*="captcha"]')
     if (!captchaEl) throw new Error('CAPTCHA element not found on GDT Taxpayer Portal')
 
@@ -66,7 +66,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     const captchaBuffer = await captchaEl.screenshot()
     const captchaBase64 = captchaBuffer.toString('base64')
 
-    onLog('Please solve the CAPTCHA directly in GDT\'s opened browser window...')
+    onLog('Vui lòng giải CAPTCHA trực tiếp trên trình duyệt GDT đang mở...')
 
     // Focus GDT's input field so they can immediately type without clicking it!
     try {
@@ -107,7 +107,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
         if (raceFinished) return
         if (userSkipped) return
         if (electronAnswer) {
-          onLog(`Typing CAPTCHA answer "${electronAnswer}" into GDT portal...`)
+          onLog(`Đang nhập mã CAPTCHA "${electronAnswer}" vào ô xác thực...`)
           // Clear and focus GDT's taxpayer input field
           await page.fill('input#captcha', '')
           await page.focus('input#captcha')
@@ -170,7 +170,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     // Check which element won the race
     const hasWrongCaptcha = await page.$('text=Vui lòng nhập đúng mã xác nhận')
     if (hasWrongCaptcha && await hasWrongCaptcha.isVisible()) {
-      onLog('GDT returned "Vui lòng nhập đúng mã xác nhận!" (Incorrect CAPTCHA). Refreshing and retrying...')
+      onLog('Cổng thông tin báo sai mã xác nhận. Đang làm mới và thử lại...')
       // GDT reloads the page on incorrect CAPTCHA, so the new CAPTCHA is already loaded.
       // We just wait 500ms for the browser to render it, then continue.
       await page.waitForTimeout(getRandomDelay(500))
@@ -179,7 +179,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
 
     const hasSuccessTable = await page.$('text=BẢNG THÔNG TIN TRA CỨU')
     if (hasSuccessTable && await hasSuccessTable.isVisible()) {
-      onLog('Verification successful! Capturing business status screenshot...')
+      onLog('Xác thực thành công! Đang chụp ảnh trạng thái hoạt động...')
       // Capture the full scrollable page to include all businesses if multiple are returned
       const screenshotBuffer = await page.screenshot({ fullPage: true })
       const screenshotBase64 = screenshotBuffer.toString('base64')
@@ -188,7 +188,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
 
     const hasNoResult = await page.$('text=Không tìm thấy người nộp thuế')
     if (hasNoResult && await hasNoResult.isVisible()) {
-      onLog('Taxpayer not found (Invalid business!). Capturing error screenshot...')
+      onLog('Không tìm thấy thông tin người nộp thuế (Doanh nghiệp không hợp lệ/không hoạt động). Đang chụp ảnh lỗi...')
       const screenshotBuffer = await page.screenshot({ fullPage: false })
       const screenshotBase64 = screenshotBuffer.toString('base64')
       return { ok: true, screenshotBase64, status: 'invalid-business' }
@@ -197,7 +197,7 @@ async function runGdtTaxpayerPortal(page, invoice, onCaptcha, onLog = () => {}) 
     // Fallback: If other status or timeout occurs, check if form is still visible
     const formIsStillVisible = await page.$('input#captcha')
     if (formIsStillVisible && await formIsStillVisible.isVisible()) {
-      onLog('CAPTCHA incorrect or timeout occurred. Refreshing and retrying...')
+      onLog('Sai mã CAPTCHA hoặc hết thời gian chờ. Đang làm mới và thử lại...')
 
       const captchaImg = await page.$('img[src*="captcha"]')
       if (captchaImg) {
