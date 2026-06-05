@@ -32,10 +32,10 @@ export default function ResumePanel({ onResume, onDeleteSession }) {
         if (onDeleteSession) onDeleteSession(session.sessionDir)
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to delete session')
+        alert(data.error || 'Không thể xóa phiên làm việc')
       }
     } catch (err) {
-      alert('Failed to delete session')
+      alert('Không thể xóa phiên làm việc')
     }
   }
 

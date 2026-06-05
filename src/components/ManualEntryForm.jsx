@@ -17,7 +17,15 @@ export default function ManualEntryForm({ onSubmit, onClose }) {
     // Clean string-based validation
     const missing = required.filter(k => !String(form[k]).trim())
     if (missing.length > 0) { 
-      setError(`Thiếu các thông tin bắt buộc: ${missing.join(', ')}`)
+      const fieldLabels = {
+        invoiceCode: 'Ký hiệu hóa đơn',
+        invoiceNumber: 'Số hóa đơn',
+        sellerName: 'Tên người bán',
+        taxId: 'Mã số thuế',
+        totalAmount: 'Tổng tiền'
+      }
+      const missingLabels = missing.map(k => fieldLabels[k] || k)
+      setError(`Thiếu các thông tin bắt buộc: ${missingLabels.join(', ')}`)
       return 
     }
 
