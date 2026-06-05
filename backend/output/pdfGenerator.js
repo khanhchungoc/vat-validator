@@ -15,7 +15,7 @@ const getStatusLabel = (status) => {
     'pending': 'ĐANG CHỜ',
     'processing': 'ĐANG XỬ LÝ'
   }
-  return mapping[status] || status.toUpperCase()
+  return mapping[status] || (status ? status.toUpperCase() : '')
 }
 
 function buildInvoicePageHTML(invoice, screenshotsDir) {
@@ -76,6 +76,8 @@ const PAGE_CSS = `
   .status-pass { background: #90EE90; color: #155724; }
   .status-invalid-invoice, .status-invalid-business { background: #FF9999; color: #721c24; }
   .status-skipped { background: #FFE066; color: #856404; }
+  .status-pending { background: #f0f0f0; color: #555; }
+  .status-processing { background: #d9ecff; color: #004085; }
   .invoice-meta { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
   .invoice-meta td { padding: 3px 6px; border: 1px solid #ddd; }
   .invoice-meta td:first-child { font-weight: bold; width: 100px; background: #f5f5f5; }   
