@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VAT-validator — Error</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Aptos', 'Segoe UI', Arial, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    h2 {
+      color: #ff6b6b;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .message-box {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: #f8f8f2;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 320px;
+      overflow-y: auto;
+      flex: 1;
+      user-select: text;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    button {
+      padding: 8px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.85; }
+    #copyBtn {
+      background: #4f46e5;
+      color: white;
+    }
+    #copyBtn.copied {
+      background: #16a34a;
+    }
+    #closeBtn {
+      background: #374151;
+      color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <h2>⚠️ Backend Startup Error</h2>
+  <div class="message-box" id="msg"></div>
+  <div class="actions">
+    <button id="copyBtn">📋 Copy Error</button>
+    <button id="closeBtn">Close</button>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search)
+    const msg = params.get('message') || '(no details)'
+    document.getElementById('msg').textContent = msg
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(msg).then(() => {
+        const btn = document.getElementById('copyBtn')
+        btn.textContent = '✅ Copied!'
+        btn.classList.add('copied')
+        setTimeout(() => {
+          btn.textContent = '📋 Copy Error'
+          btn.classList.remove('copied')
+        }, 2000)
+      })
+    })
+
+    document.getElementById('closeBtn').addEventListener('click', () => window.close())
+  </script>
+</body>
+</html>

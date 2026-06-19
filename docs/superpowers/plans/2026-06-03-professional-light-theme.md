@@ -1,0 +1,548 @@
+# Professional Accountant Light Theme Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Transform the UI styling to a professional, accountant-friendly light theme using a corporate Navy & Slate color scheme, removing dark-theme glassmorphism and gradients.
+
+**Architecture:** Redefine the CSS variables under `:root` in `src/index.css`, rewrite styling selectors for layout, buttons, forms, and cards to match a solid-panel light theme, and verify the frontend build compiles without errors.
+
+**Tech Stack:** React 19, CSS, Vite (Build Tool)
+
+---
+
+### Task 1: Rewrite UI Styling in index.css
+
+**Files:**
+- Modify: `src/index.css`
+
+- [ ] **Step 1: Replace :root CSS variables and styling classes in `src/index.css`**
+  Modify `src/index.css` to update variables and redefine classes to use solid light gray/white panels, dark slate text, navy corporate accent colors, and remove text/button gradients and animations.
+
+  Rewrite the entire content of `src/index.css` with the following clean, professional light theme styles:
+  ```css
+  :root {
+    --bg-color: #f1f5f9;         /* Soft light-gray background */
+    --panel-bg: #ffffff;         /* Solid white for panels/cards */
+    --panel-border: #cbd5e1;     /* Professional slate-gray border */
+    --text-main: #0f172a;        /* Deep slate for high-contrast reading */
+    --text-muted: #475569;       /* Slate-gray for labels and secondary info */
+    --accent: #1e3a8a;           /* Deep corporate Navy Blue */
+    --accent-hover: #1d4ed8;     /* Vibrant blue hover state */
+    --accent2: #4f46e5;          /* Indigo accent */
+    --pass: #15803d;             /* Audit green */
+    --fail: #b91c1c;             /* Audit red */
+    --skip: #b45309;             /* Audit amber */
+    --radius: 8px;               /* Cleaner, slightly sharper corners */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .app {
+    display: flex; flex-direction: column; height: 100vh;
+    padding: 24px;
+  }
+
+  .app-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .app-header h1 {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .ws-status {
+    background: var(--panel-bg); padding: 6px 12px;
+    border-radius: 20px; font-size: 0.85rem; border: 1px solid var(--panel-border);
+    color: var(--text-muted);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    border: none; padding: 10px 20px; border-radius: 6px; color: white;
+    cursor: pointer; font-weight: 600; font-family: inherit;
+    transition: background 0.2s;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+
+  .btn-secondary {
+    background: var(--panel-bg); border: 1px solid var(--panel-border);
+    padding: 10px 20px; border-radius: 6px; color: var(--text-main);
+    cursor: pointer; font-weight: 500; font-family: inherit;
+    transition: background 0.2s, border-color 0.2s;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-secondary:hover { background: #f8fafc; border-color: #94a3b8; }
+
+  .btn-stop {
+    background: #fef2f2; border: 1px solid #fca5a5;
+    padding: 10px 20px; border-radius: 6px; color: var(--fail);
+    cursor: pointer; font-weight: 600; font-family: inherit;
+    transition: all 0.2s;
+  }
+  .btn-stop:hover { background: var(--fail); color: white; border-color: var(--fail); }
+
+  .dropzone {
+    border: 2px dashed var(--panel-border);
+    border-radius: var(--radius);
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--panel-bg);
+    transition: border-color 0.2s, background 0.2s;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .dropzone.dragging, .dropzone:not(.disabled):hover {
+    border-color: var(--accent);
+    background: #f0fdf4; /* Soft green-blue background on hover */
+    color: var(--text-main);
+  }
+  .dropzone.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    border-style: solid;
+    background: #f1f5f9;
+  }
+
+  .dropzone * {
+    pointer-events: none;
+  }
+
+  .modal-overlay {
+    position: absolute; inset: 0;
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+    border-radius: var(--radius);
+  }
+  .modal {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius); padding: 32px; width: 480px; max-width: 95vw;
+    box-shadow: var(--shadow-md);
+  }
+  .modal h3 { margin-bottom: 20px; font-size: 1.2rem; color: var(--text-main); }
+  .field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+  .mock-input {
+    background: var(--panel-bg); border: 1px solid var(--panel-border);
+    border-radius: 6px; padding: 10px 14px; color: var(--text-main);
+    font-size: 0.9rem; font-family: inherit; width: 100%;
+    transition: border-color 0.2s;
+  }
+  .mock-input:focus { outline: none; border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+  .error { color: var(--fail); font-size: 0.85rem; margin-bottom: 12px; }
+
+  .captcha-modal { text-align: center; }
+  .captcha-image { 
+    background: white; border-radius: 6px; margin-bottom: 20px; 
+    max-width: 100%; border: 2px solid var(--panel-border);
+  }
+  .btn-skip {
+    background: transparent; border: 1px solid var(--fail); color: var(--fail);
+    padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn-skip:not(:disabled):hover { background: var(--fail); color: white; }
+
+  .queue { margin-top: 24px; }
+  .queue h3 { margin-bottom: 12px; font-size: 1rem; color: var(--text-muted); }
+  .invoice-card {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--panel-bg); border: 1px solid var(--panel-border);
+    border-radius: 6px; padding: 12px 16px; margin-bottom: 8px;
+    transition: background 0.2s, border-color 0.2s;
+    box-shadow: var(--shadow-sm);
+  }
+  .invoice-card:hover {
+    background: #f8fafc;
+  }
+  .invoice-card.processing { border-color: var(--accent); border-width: 2px; }
+  .invoice-card.pass { border-color: var(--pass); border-width: 2px; }
+  .invoice-card.invalid-invoice, .invoice-card.invalid-business { border-color: var(--fail); border-width: 2px; }
+  .invoice-info { display: flex; flex-direction: column; gap: 2px; }
+  .invoice-id { font-weight: 600; font-size: 0.95rem; color: var(--text-main); }
+  .invoice-seller { font-size: 0.8rem; color: var(--text-muted); }
+  .invoice-amount { font-size: 0.8rem; color: var(--accent); font-weight: 600; }
+  .invoice-status { font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+
+  .app-main {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .app-main::-webkit-scrollbar {
+    width: 6px;
+  }
+  .app-main::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .app-main::-webkit-scrollbar-thumb {
+    background: var(--panel-border);
+    border-radius: 20px;
+  }
+  .app-main::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+
+  .resume-panel {
+    background: var(--panel-bg); border: 1px solid var(--panel-border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .resume-panel h3 { margin-bottom: 14px; font-size: 0.95rem; color: var(--text-main); }
+  .resume-card {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #e2e8f0;
+  }
+  .resume-card:last-child { border-bottom: none; }
+  .resume-info { display: flex; flex-direction: column; }
+  .resume-id { font-weight: 500; font-size: 0.9rem; color: var(--text-main); }
+  .resume-progress { font-size: 0.78rem; color: var(--text-muted); }
+
+  .download-section {
+    margin-top: 32px; padding: 24px;
+    background: var(--panel-bg); border: 2px solid var(--pass);
+    border-radius: var(--radius); text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .download-section h3 { margin-bottom: 16px; color: var(--pass); }
+  .download-buttons { display: flex; gap: 16px; justify-content: center; }
+  .btn-download {
+    display: inline-block; padding: 12px 28px; border-radius: 6px;
+    font-family: inherit; font-size: 0.95rem; font-weight: 600;
+    text-decoration: none; cursor: pointer; transition: opacity 0.2s;
+  }
+  .btn-download:hover { opacity: 0.85; }
+  .btn-pdf { background: #dc3545; color: white; }
+  .btn-xlsx { background: #198754; color: white; }
+
+  .progress-container { margin: 20px 0; }
+  .progress-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; }
+  .progress-pct { font-weight: 600; color: var(--accent); }
+  .progress-track {
+    height: 8px; background: #e2e8f0;
+    border-radius: 4px; overflow: hidden; border: 1px solid var(--panel-border);
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    border-radius: 4px; transition: width 0.4s ease;
+  }
+  .progress-stats { display: flex; gap: 20px; margin-top: 8px; font-size: 0.8rem; }
+
+  .mode-toggle { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+  .mode-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+  .mode-options { display: flex; background: var(--panel-bg); border-radius: 6px; padding: 3px; border: 1px solid var(--panel-border); }
+  .mode-btn {
+    background: none; border: none; color: var(--text-muted);
+    padding: 6px 16px; border-radius: 4px; cursor: pointer;
+    font-family: inherit; font-size: 0.85rem; transition: all 0.2s;
+  }
+  .mode-btn.active { background: var(--accent); color: white; }
+  .mode-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .error-banner {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fef2f2; border: 1px solid #fca5a5;
+    border-radius: var(--radius); padding: 16px 20px; margin: 16px 0;
+  }
+  .error-banner-content { display: flex; gap: 12px; align-items: flex-start; }
+  .error-icon { font-size: 1.4rem; }
+  .error-banner-content strong { display: block; margin-bottom: 4px; color: var(--fail); }
+  .error-banner-content p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+  .error-banner-actions { display: flex; gap: 10px; flex-shrink: 0; }
+
+  .step-button {
+    display: block; 
+    width: 100%; 
+    margin: 16px 0;
+    padding: 14px; 
+    background: var(--accent);
+    color: white; 
+    border: none; 
+    border-radius: var(--radius);
+    font-family: inherit; 
+    font-size: 1rem; 
+    font-weight: 600;
+    cursor: pointer; 
+    transition: background 0.2s;
+  }
+  .step-button:hover {
+    background: var(--accent-hover);
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Sidebar Sliding Layout */
+  .app-layout {
+    display: flex;
+    width: 100%;
+    max-width: 1300px;
+    margin: 0 auto;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .layout-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .layout-left-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+  .layout-right {
+    width: 360px;
+    flex-shrink: 0;
+    margin-left: 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+    margin-right: 0;
+    opacity: 1;
+  }
+
+  .app-layout.no-sidebar .layout-right {
+    margin-right: -384px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .btn-console-toggle {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-main);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-console-toggle:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+  }
+  .btn-console-toggle.active {
+    background: #eff6ff;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Console Styling */
+  .live-console {
+    background: #0f172a; /* Keep console background dark for readability */
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Consolas', 'Courier New', Courier, monospace;
+  }
+  .live-console.expanded {
+    flex: 1;
+    min-height: 250px;
+  }
+  .live-console.collapsed {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+  .console-accordion-header {
+    background: #1e293b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .console-header-btn {
+    background: none;
+    border: none;
+    flex: 1;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    color: white;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .console-header-btn:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .console-close-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+  .console-close-btn:hover {
+    color: var(--fail);
+  }
+  .console-status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .console-status-indicator.idle {
+    background: #64748b;
+    box-shadow: 0 0 4px #64748b;
+  }
+  .console-status-indicator.active {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: console-indicator-pulse 1.5s infinite;
+  }
+  @keyframes console-indicator-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
+  .console-chevron {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    transition: transform 0.3s;
+  }
+  .console-chevron.open {
+    transform: rotate(180deg);
+  }
+  .console-body {
+    flex: 1;
+    min-height: 0;
+    padding: 14px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+  .console-body::-webkit-scrollbar {
+    width: 6px;
+  }
+  .console-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .console-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+  }
+  .console-body::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+  .console-placeholder {
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-style: italic;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+  .console-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .console-line {
+    display: flex;
+    gap: 8px;
+    word-break: break-all;
+  }
+  .console-time {
+    color: #3b82f6;
+    flex-shrink: 0;
+  }
+  .console-text {
+    color: #e2e8f0;
+  }
+
+  @media (max-width: 960px) {
+    .app-layout {
+      flex-direction: column;
+    }
+    .layout-right {
+      width: 100%;
+      margin-left: 0;
+      margin-top: 16px;
+    }
+    .app-layout.no-sidebar .layout-right {
+      display: none;
+    }
+  }
+
+  .btn-danger-outline {
+    background: var(--panel-bg);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-danger-outline:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+  }
+  ```
+
+- [ ] **Step 2: Run frontend build to check for errors**
+  Run: `npm run build`
+  Expected: Successful compilation without errors (ensure CSS compilation, postcss, and asset bundlers compile successfully).
+
+- [ ] **Step 3: Run Jest tests to verify no functional regressions**
+  Run: `npm test`
+  Expected: All tests pass.
+
+- [ ] **Step 4: Commit the changes**
+  Run: `git add src/index.css; git commit -m "feat(ui): implement professional accountant light theme with navy and slate scheme"`
