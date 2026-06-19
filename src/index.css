@@ -29,7 +29,7 @@ h2, h3 {
 body {
   background: var(--bg-color);
   color: var(--text-main);
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  font-family: 'Aptos', 'Segoe UI', Arial, sans-serif;
   height: 100vh;
   overflow: hidden;
 }

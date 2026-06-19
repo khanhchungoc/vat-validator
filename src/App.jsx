@@ -7,6 +7,27 @@ function getApiBase() {
   const port = new URLSearchParams(window.location.search).get('port') || '3001'
   return `http://localhost:${port}`
 }
+
+function getScreenNumber(value, fallback) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : fallback
+}
+
+function getBrowserWindowBounds() {
+  const display = window.screen || {}
+  const x = getScreenNumber(display.availLeft, 0)
+  const y = getScreenNumber(display.availTop, 0)
+  const width = Math.max(1, getScreenNumber(display.availWidth, display.width || 1280))
+  const height = Math.max(1, getScreenNumber(display.availHeight, display.height || 900))
+  const appWidth = Math.floor(width / 2)
+
+  return {
+    x: Math.round(x + appWidth),
+    y: Math.round(y),
+    width: Math.round(width - appWidth),
+    height: Math.round(height)
+  }
+}
 import DropZone from './components/DropZone'
 import ManualEntryForm from './components/ManualEntryForm'
 import InvoiceQueue from './components/InvoiceQueue'
@@ -234,7 +255,10 @@ export default function App() {
     }
     setProcessingMode(mode)
     setIsProcessing(true)
-    const sent = send({ type: 'start-processing', payload: { sessionDir, mode } })
+    const sent = send({
+      type: 'start-processing',
+      payload: { sessionDir, mode, browserBounds: getBrowserWindowBounds() }
+    })
     if (!sent) {
       setAppError('Không thể bắt đầu xử lý: WebSocket mất kết nối.')
       setIsProcessing(false)

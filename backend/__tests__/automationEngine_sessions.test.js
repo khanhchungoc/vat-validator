@@ -32,6 +32,7 @@ describe('Automation Engine Session Saving', () => {
   beforeEach(async () => {
     await engine.stopProcessing()
     jest.clearAllMocks()
+    delete process.env.VATOCR_BROWSER_BOUNDS
     mockPage = {
       goto: jest.fn(),
       close: jest.fn(),
@@ -127,5 +128,40 @@ describe('Automation Engine Session Saving', () => {
 
     // Site 2 called only ONCE despite two invoices sharing the same Tax ID
     expect(runGdtTaxpayerPortal).toHaveBeenCalledTimes(1)
+  })
+
+  test('should position the GDT browser from Electron-provided split-screen bounds', async () => {
+    process.env.VATOCR_BROWSER_BOUNDS = JSON.stringify({
+      x: 960,
+      y: 0,
+      width: 960,
+      height: 1040
+    })
+
+    await engine.startProcessing('test-session-dir', 'auto')
+
+    expect(chromium.launch).toHaveBeenCalledWith({
+      headless: false,
+      args: ['--window-position=960,0', '--window-size=960,1040']
+    })
+    expect(mockPage.setViewportSize).toHaveBeenCalledWith({ width: 960, height: 920 })
+  })
+
+  test('should prefer explicit app-provided browser bounds over environment bounds', async () => {
+    process.env.VATOCR_BROWSER_BOUNDS = JSON.stringify({
+      x: 100,
+      y: 100,
+      width: 800,
+      height: 600
+    })
+    const browserBounds = { x: 960, y: 0, width: 960, height: 1040 }
+
+    await engine.startProcessing('test-session-dir', 'auto', browserBounds)
+
+    expect(chromium.launch).toHaveBeenCalledWith({
+      headless: false,
+      args: ['--window-position=960,0', '--window-size=960,1040']
+    })
+    expect(mockPage.setViewportSize).toHaveBeenCalledWith({ width: 960, height: 920 })
   })
 })

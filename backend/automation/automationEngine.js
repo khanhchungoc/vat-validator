@@ -5,6 +5,11 @@ const { getInvoices, updateInvoiceStatus } = require('../invoiceStore')
 const { saveSession } = require('../sessionManager')
 const { generatePDF } = require('../output/pdfGenerator')
 const { generateXLSX } = require('../output/xlsxGenerator')
+const {
+  buildBrowserLaunchOptions,
+  resolveBrowserBounds,
+  getViewportForBrowserBounds
+} = require('../windowLayout')
 const fs = require('fs')
 const path = require('path')
 
@@ -70,7 +75,7 @@ function advanceStep() {
   if (stepResolve) { stepResolve(); stepResolve = null }
 }
 
-async function startProcessing(sessionDir, mode = 'auto') {
+async function startProcessing(sessionDir, mode = 'auto', browserBoundsOverride = null) {
   if (isRunning) {
     broadcast({ type: 'error', payload: 'Automation engine is already running' })
     return { ok: false, error: 'Already running' }
@@ -83,12 +88,10 @@ async function startProcessing(sessionDir, mode = 'auto') {
   broadcast({ type: 'processing-log-clear' })
 
   try {
-    browser = await chromium.launch({ 
-      headless: false,
-      args: ['--start-minimized']
-    })
+    const browserBounds = resolveBrowserBounds(browserBoundsOverride)
+    browser = await chromium.launch(buildBrowserLaunchOptions(browserBounds))
     const page = await browser.newPage()
-    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.setViewportSize(getViewportForBrowserBounds(browserBounds))
 
     const invoices = getInvoices().filter(i => i.status === 'pending')
 

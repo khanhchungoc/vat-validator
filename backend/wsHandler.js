@@ -10,12 +10,14 @@ async function handleMessage(ws, msg, wss) {
         ws.send(JSON.stringify({ type: 'pong' }))
         break
       case 'start-processing': {
-        let { sessionDir, mode } = msg.payload || {}
+        let { sessionDir, mode, browserBounds } = msg.payload || {}
         if (!sessionDir || typeof sessionDir !== 'string' || sessionDir.includes('..')) {
           ws.send(JSON.stringify({ type: 'error', payload: 'Invalid session directory' }))
           break
         }
-        const result = await engine.startProcessing(sessionDir, mode)
+        const result = browserBounds
+          ? await engine.startProcessing(sessionDir, mode, browserBounds)
+          : await engine.startProcessing(sessionDir, mode)
         if (result && !result.ok) {
           ws.send(JSON.stringify({ type: 'error', payload: result.error }))
         }

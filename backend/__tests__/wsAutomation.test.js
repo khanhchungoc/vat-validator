@@ -25,6 +25,15 @@ describe('WS Automation Integration', () => {
     expect(engine.startProcessing).toHaveBeenCalledWith('test-dir', 'step')
   })
 
+  test('start-processing forwards browser window bounds when present', async () => {
+    const browserBounds = { x: 960, y: 0, width: 960, height: 1040 }
+    const payload = { sessionDir: 'test-dir', mode: 'auto', browserBounds }
+
+    await handleMessage(ws, { type: 'start-processing', payload })
+
+    expect(engine.startProcessing).toHaveBeenCalledWith('test-dir', 'auto', browserBounds)
+  })
+
   test('start-processing rejects invalid sessionDir', async () => {
     const payload = { sessionDir: '../danger', mode: 'auto' }
     await handleMessage(ws, { type: 'start-processing', payload })

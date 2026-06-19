@@ -1,7 +1,8 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, screen } = require('electron')
 const path = require('path')
 const net = require('net')
 const os = require('os')
+const { BROWSER_BOUNDS_ENV, buildSplitWindowLayout } = require('../backend/windowLayout')
 
 const isDev = !app.isPackaged
 
@@ -42,9 +43,12 @@ function showErrorWindow(err) {
   win.setMenu(null)
 }
 
-function startBackend(port) {
+function startBackend(port, browserBounds) {
   try {
     process.env.BACKEND_PORT = String(port)
+    if (browserBounds) {
+      process.env[BROWSER_BOUNDS_ENV] = JSON.stringify(browserBounds)
+    }
     if (!isDev) {
       process.env.NODE_ENV = 'production'
       process.env.OUTPUT_DIR = path.join(app.getPath('documents'), 'VAT-validator', 'output')
@@ -63,12 +67,19 @@ function startBackend(port) {
   }
 }
 
-function createWindow(port) {
+function getSplitWindowLayout() {
+  return buildSplitWindowLayout(screen.getPrimaryDisplay().workArea)
+}
+
+function createWindow(port, appBounds) {
+  const bounds = appBounds || getSplitWindowLayout().appBounds
   const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 960,
-    minHeight: 600,
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
+    minWidth: Math.min(960, bounds.width),
+    minHeight: Math.min(600, bounds.height),
     title: 'VAT-validator — VAT Invoice Validator',
     webPreferences: {
       nodeIntegration: false,
@@ -104,11 +115,14 @@ app.whenReady().then(async () => {
     return
   }
 
-  startBackend(port)
-  setTimeout(() => createWindow(port), isDev ? 1000 : 2000)
+  const windowLayout = getSplitWindowLayout()
+  startBackend(port, windowLayout.browserBounds)
+  setTimeout(() => createWindow(port, windowLayout.appBounds), isDev ? 1000 : 2000)
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow(port)
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow(port, getSplitWindowLayout().appBounds)
+    }
   })
 
   // Focus existing window if a second instance tries to launch
