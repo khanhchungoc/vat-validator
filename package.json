@@ -10,6 +10,7 @@
     "dev:electron": "wait-on http://localhost:5173 && electron .",
     "build": "vite build",
     "pack": "npm run build && electron-builder && node scripts/flatten-release.js",
+    "dist:zip": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-release-zip.ps1",
     "test": "jest --testPathIgnorePatterns=release"
   },
   "keywords": [],
