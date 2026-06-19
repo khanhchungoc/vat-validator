@@ -4,4 +4,4 @@ out/
 .vite/
 /output/
 .superpowers/
-release/
+/release/
